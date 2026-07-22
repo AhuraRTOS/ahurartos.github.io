@@ -258,8 +258,8 @@
       </div>
       <div class="card">
         <div class="icon">🔗</div>
-        <h3>Standard IPC / sync primitives</h3>
-        <p>Mutexes, semaphores, queues, and event groups — all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
+        <h3>IPC, sync &amp; task notifications</h3>
+        <p>Mutexes with priority inheritance, semaphores, queues, event groups, and lightweight per-task notifications — all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
       </div>
       <div class="card">
         <div class="icon">🛎</div>
@@ -384,7 +384,7 @@ add_subdirectory(kernel)</code></pre>
         <p>Configuration and build tooling, optional modules (filesystem, additional IPC), community-driven extensions.</p>
       </div>
     </div>
-    <div class="gaps"><b>Known gaps</b> tracked for later: mutex priority inheritance, tickless idle (implemented but not yet wired into the idle task), and multi-core validation on real hardware.</div>
+    <div class="gaps"><b>Known gaps</b> tracked for later: tickless idle (implemented but not yet wired into the idle task) and multi-core validation on real hardware.</div>
   </div>
 </section>
 
