@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AhuraRTOS — The Prince of RTOS</title>
-<meta name="description" content="AhuraRTOS: a small preemptive real-time operating system for ARM Cortex-M. Clean core, single public header, explicit application/kernel boundary.">
+<meta name="description" content="AhuraRTOS: a small, multi-platform preemptive real-time operating system. Architecture-independent core, single public header, explicit application/kernel boundary. ARM Cortex-M ports today, more architectures planned.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#9889;</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,6 +102,14 @@
     border:1px solid var(--panel-border); background:var(--panel);
     padding:6px 12px; border-radius:7px;
   }
+  .mcu-chip.planned{
+    color:var(--text-faint); background:transparent; border-style:dashed;
+  }
+  .mcu-caption{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase;
+    color:var(--text-faint); margin:0 0 12px;
+  }
+  .mcu-caption + .mcu-strip + .mcu-caption{margin-top:24px;}
 
   /* SECTION HEADERS */
   .section{padding:88px 0;}
@@ -214,9 +222,9 @@
     <div class="status-pill"><span class="dot"></span> Early &amp; under active development — Cortex-M functional today</div>
     <h1 class="title">The <span class="grad">Prince</span> of RTOS</h1>
     <p class="subtitle">
-      <b>AhuraRTOS</b> is a small preemptive real-time operating system for ARM Cortex-M —
-      built around a clean core, a single public header, and an explicit application/kernel boundary.
-      No editable kernel files. No hidden config.
+      <b>AhuraRTOS</b> is a small, <b>multi-platform</b> preemptive real-time operating system —
+      an architecture-independent core behind a thin port layer, a single public header, and an explicit
+      application/kernel boundary. No editable kernel files. No hidden config.
     </p>
     <div class="hero-ctas">
       <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">⭐ View on GitHub</a>
@@ -224,6 +232,7 @@
       <a class="btn btn-ghost btn-lg" href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
       <a class="btn btn-ghost btn-lg" href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
     </div>
+    <p class="mcu-caption">Ports available today — ARM Cortex-M</p>
     <div class="mcu-strip">
       <span class="mcu-chip">Cortex-M0</span>
       <span class="mcu-chip">M0+</span>
@@ -237,6 +246,12 @@
       <span class="mcu-chip">M55</span>
       <span class="mcu-chip">M85</span>
     </div>
+    <p class="mcu-caption">Planned — same port interface, no core changes</p>
+    <div class="mcu-strip">
+      <span class="mcu-chip planned">RISC-V</span>
+      <span class="mcu-chip planned">Xtensa / ESP32</span>
+      <span class="mcu-chip planned">more to come</span>
+    </div>
   </div>
 </section>
 
@@ -244,7 +259,7 @@
   <div class="wrap">
     <div class="eyebrow">Why AhuraRTOS</div>
     <h2 class="h2">Built for real embedded work</h2>
-    <p class="lede">A functional, self-testing kernel across the full Cortex-M range — focused on STM32 today, with more MCU families planned.</p>
+    <p class="lede">A functional, self-testing kernel whose core knows nothing about the CPU it runs on. Every Cortex-M from M0 to M85 works today; further architectures plug into the same port interface.</p>
     <div class="grid">
       <div class="card">
         <div class="icon">⏱</div>
@@ -253,8 +268,8 @@
       </div>
       <div class="card">
         <div class="icon">🧩</div>
-        <h3>Broad Cortex-M coverage today</h3>
-        <p>Ports spanning ARMv6-M through ARMv8.1-M: M0, M0+, M3, M4, M7, M23, M33, M35P, M52, M55, and M85. Cortex-M is the focus for now — RISC-V, Xtensa/ESP32, and other architectures are planned next (see Roadmap).</p>
+        <h3>Multi-platform by design</h3>
+        <p>The core is portable C. A port supplies only what the CPU decides — context switch, tick, critical section, atomics, low-power hooks — so a new architecture is a new port, not a kernel change. ARM Cortex-M ships today: ARMv6-M through ARMv8.1-M, M0 to M85, in three shared port files. RISC-V and Xtensa/ESP32 are next (see Roadmap).</p>
       </div>
       <div class="card">
         <div class="icon">🔗</div>
@@ -370,13 +385,13 @@ add_subdirectory(kernel)</code></pre>
     <div class="roadmap">
       <div class="phase active">
         <div class="phase-tag">Phase 1 — In Progress</div>
-        <h3>STM32 first</h3>
-        <p>Cortex-M core kernel, examples, and a minimal portable HAL.</p>
+        <h3>ARM Cortex-M first</h3>
+        <p>Core kernel, the architecture port layer, examples, and a minimal portable HAL — with STM32 as the bring-up target.</p>
       </div>
       <div class="phase">
         <div class="phase-tag">Phase 2 — Planned</div>
-        <h3>Expand versatility</h3>
-        <p>Ports for more MCU families (ESP32, RISC-V, NXP, TI, etc.), modular driver interfaces, consistent cross-platform APIs.</p>
+        <h3>More architectures</h3>
+        <p>Ports for further instruction sets (RISC-V, Xtensa/ESP32), modular driver interfaces, consistent cross-platform APIs. Vendor families built on Cortex-M — NXP, TI, Nordic — already work through the ARM ports today.</p>
       </div>
       <div class="phase">
         <div class="phase-tag">Phase 3 — Planned</div>
@@ -411,7 +426,7 @@ add_subdirectory(kernel)</code></pre>
         <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
       </div>
     </div>
-    <div class="foot-note">A small preemptive RTOS for ARM Cortex-M. Built by <a href="https://github.com/nimaltd" target="_blank" rel="noopener" style="color:var(--text-faint); text-decoration:underline;">@nimaltd</a>.</div>
+    <div class="foot-note">A small, multi-platform preemptive RTOS. Built by <a href="https://github.com/nimaltd" target="_blank" rel="noopener" style="color:var(--text-faint); text-decoration:underline;">@nimaltd</a>.</div>
   </div>
 </footer>
 
