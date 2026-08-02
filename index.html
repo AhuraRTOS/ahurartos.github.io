@@ -3,10 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AhuraRTOS — The Prince of RTOS</title>
-<meta name="description" content="AhuraRTOS: a small, multi-platform preemptive real-time operating system. Architecture-independent core, single public header, explicit application/kernel boundary. ARM Cortex-M ports today, more architectures planned.">
+<title>AhuraRTOS — Open-source RTOS for ARM Cortex-M | The Prince of RTOS</title>
+<meta name="description" content="AhuraRTOS is a small, open-source preemptive real-time operating system for embedded systems. Priority scheduling, mutexes, queues, timers and a work queue on ARM Cortex-M M0 to M85 — MIT licensed.">
+<link rel="canonical" href="https://ahurartos.github.io/">
+<meta name="theme-color" content="#0a0d12">
+<meta name="author" content="AhuraRTOS">
+
+<!-- Open Graph: how the link renders on Telegram, LinkedIn, Discord, Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AhuraRTOS">
+<meta property="og:url" content="https://ahurartos.github.io/">
+<meta property="og:title" content="AhuraRTOS — Open-source RTOS for ARM Cortex-M">
+<meta property="og:description" content="A small, preemptive real-time operating system for embedded systems. Priority scheduling, mutexes, queues, timers and a work queue on ARM Cortex-M M0 to M85 — MIT licensed.">
+<meta property="og:image" content="https://ahurartos.github.io/logo.jpg">
+<meta property="og:image:width" content="1254">
+<meta property="og:image:height" content="1254">
+<meta property="og:image:alt" content="AhuraRTOS logo">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter/X. "summary" not "summary_large_image": the logo is square, and a
+     wide card would crop the top and bottom off it. -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AhuraRTOS — Open-source RTOS for ARM Cortex-M">
+<meta name="twitter:description" content="A small, preemptive real-time operating system for embedded systems. MIT licensed, Cortex-M M0 to M85.">
+<meta name="twitter:image" content="https://ahurartos.github.io/logo.jpg">
+<meta name="twitter:image:alt" content="AhuraRTOS logo">
+
 <link rel="icon" href="logo.jpg">
 <link rel="apple-touch-icon" href="logo.jpg">
+
+<!-- Structured data: tells search engines this is free, open-source developer
+     software rather than an article, which is what earns the richer result. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AhuraRTOS",
+  "alternateName": "Ahura RTOS",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "Real-time operating system",
+  "operatingSystem": "Bare metal (ARM Cortex-M)",
+  "description": "A small, open-source preemptive real-time operating system for embedded systems. Priority-based scheduling, mutexes with priority inheritance, semaphores, queues, event groups, software timers and a deferrable work queue, on ARM Cortex-M M0 through M85.",
+  "url": "https://ahurartos.github.io/",
+  "image": "https://ahurartos.github.io/logo.jpg",
+  "codeRepository": "https://github.com/AhuraRTOS/AhuraRTOS",
+  "programmingLanguage": "C",
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "AhuraRTOS",
+    "url": "https://github.com/AhuraRTOS"
+  },
+  "keywords": "RTOS, real-time operating system, embedded, ARM Cortex-M, STM32, scheduler, firmware, MIT, open source, preemptive, microcontroller"
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -159,6 +215,13 @@
     padding:3px 8px; border-radius:6px; display:inline-block; margin-bottom:12px;
   }
   .cfg.always{color:var(--accent-2); background:rgba(79,209,197,0.10); border-color:rgba(79,209,197,0.28);}
+  /* Deliberately a different colour from .cfg: this is a caution, not a config switch. */
+  .untested{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.2px;
+    color:#ffb09b; background:rgba(255,120,90,0.10); border:1px solid rgba(255,120,90,0.34);
+    padding:3px 8px; border-radius:6px; display:inline-block; margin:0 0 12px;
+  }
+  .card .untested{margin:0 0 10px;}
   .feat p{margin:0 0 14px; color:var(--text-dim); font-size:14px; line-height:1.65;}
   .feat pre{margin-top:auto; font-size:12.5px; padding:14px 16px;}
   .feat pre code{font-size:12.5px;}
@@ -340,12 +403,14 @@
       <div class="card">
         <div class="icon">🔒</div>
         <h3>TrustZone support (ARMv8-M)</h3>
-        <p>Secure, non-secure, and disabled modes, with weak callbacks for secure-context banking.</p>
+        <span class="untested">not tested on hardware</span>
+        <p>Secure, non-secure, and disabled modes, with weak callbacks for secure-context banking. Compiles and links, but has not been run on a TrustZone-enabled part.</p>
       </div>
       <div class="card">
         <div class="icon">🧵</div>
-        <h3>Multi-core scheduling (experimental)</h3>
-        <p>Per-task core affinity across shared ready lists — not yet validated on real multi-core silicon.</p>
+        <h3>Multi-core scheduling</h3>
+        <span class="untested">not tested on hardware</span>
+        <p>Per-task core affinity across shared ready lists. Builds in the CI matrix, but has never run on real multi-core silicon.</p>
       </div>
       <div class="card">
         <div class="icon">✅</div>
@@ -553,7 +618,8 @@ OS_ASSERT(index &lt; count);</code></pre>
       <div class="feat">
         <h3>TrustZone</h3>
         <span class="cfg">OS_CONFIG_TRUSTZONE</span>
-        <p>Secure, non-secure or disabled, chosen per build on ARMv8-M. In non-secure mode the context switch banks each task's secure state through weak callbacks, so only tasks that actually call into secure code pay for it.</p>
+        <span class="untested">not tested on hardware</span>
+        <p>Secure, non-secure or disabled, chosen per build on ARMv8-M. In non-secure mode the context switch banks each task's secure state through weak callbacks, so only tasks that actually call into secure code pay for it. <b>Treat this as unproven:</b> the code compiles and the callbacks are wired, but none of it has been exercised on a part with the Security Extension enabled.</p>
         <pre><code>#define OS_CONFIG_TRUSTZONE  OS_CONFIG_TRUSTZONE_NON_SECURE
 
 void os_arch_tz_context_save_cb(uint32_t task_id);
@@ -561,9 +627,10 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
       </div>
 
       <div class="feat">
-        <h3>Multi-core and tickless <span style="color:var(--text-faint); font-weight:400;">(experimental)</span></h3>
+        <h3>Multi-core and tickless</h3>
         <span class="cfg">OS_CONFIG_CORE_COUNT · OS_CONFIG_TICKLESS_ENABLE</span>
-        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists; it compiles and is exercised in CI but has not run on real multi-core silicon. Tickless idle suppresses the tick across a known-idle window — implemented on the ARMv8-M port, not yet wired into the idle task.</p>
+        <span class="untested">not tested on hardware</span>
+        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists; it compiles and is exercised in CI, but has never run on real multi-core silicon. Tickless idle suppresses the tick across a known-idle window — implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
         <pre><code>OS_TASK_CONFIG(entry, NULL, prio,
                OS_TASK_CORE(0) | OS_TASK_CORE(2));
 
@@ -732,7 +799,7 @@ add_subdirectory(kernel)</code></pre>
         <p>Configuration and build tooling, optional modules (filesystem, additional IPC), community-driven extensions.</p>
       </div>
     </div>
-    <div class="gaps"><b>Known gaps</b> tracked for later: tickless idle (implemented but not yet wired into the idle task) and multi-core validation on real hardware.</div>
+    <div class="gaps"><b>Not yet proven on hardware:</b> TrustZone, multi-core (SMP) scheduling, and tickless idle. All three build and are exercised in CI, but none has been run on a part that actually has the feature — treat them as unfinished rather than as capabilities you can rely on today. Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
   </div>
 </section>
 
