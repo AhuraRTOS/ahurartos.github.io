@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AhuraRTOS — The Prince of RTOS</title>
 <meta name="description" content="AhuraRTOS: a small, multi-platform preemptive real-time operating system. Architecture-independent core, single public header, explicit application/kernel boundary. ARM Cortex-M ports today, more architectures planned.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#9889;</text></svg>">
+<link rel="icon" href="logo.jpg">
+<link rel="apple-touch-icon" href="logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -51,6 +52,13 @@
   .nav-inner{display:flex; align-items:center; justify-content:space-between; padding:14px 24px;}
   .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:0.2px;}
   .brand .flame{color:var(--accent); font-size:20px;}
+  /* The mark degrades to the ⚡ text glyph if logo.jpg is not present (onerror below). */
+  .brand-mark{width:30px; height:30px; border-radius:50%; display:block;}
+  .hero-mark{
+    width:132px; height:132px; border-radius:50%; display:block; margin:0 auto 26px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.55), 0 0 0 1px var(--panel-border);
+  }
+  @media (max-width:600px){ .hero-mark{width:104px; height:104px;} }
   nav.links{display:flex; gap:28px; font-size:14px; color:var(--text-dim);}
   nav.links a{text-decoration:none; transition:color .15s;}
   nav.links a:hover{color:var(--text);}
@@ -137,6 +145,40 @@
   .card h3{font-size:16.5px; margin:0 0 8px; font-weight:600;}
   .card p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.65;}
 
+  /* FEATURE REFERENCE */
+  .feat-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
+  @media (max-width:900px){.feat-grid{grid-template-columns:1fr;}}
+  .feat{
+    background:var(--panel); border:1px solid var(--panel-border);
+    border-radius:var(--radius); padding:24px; display:flex; flex-direction:column;
+  }
+  .feat h3{margin:0 0 10px; font-size:16.5px; font-weight:600;}
+  .cfg{
+    font-family:var(--mono); font-size:11px; color:var(--accent);
+    background:var(--accent-soft); border:1px solid rgba(240,168,40,0.25);
+    padding:3px 8px; border-radius:6px; display:inline-block; margin-bottom:12px;
+  }
+  .cfg.always{color:var(--accent-2); background:rgba(79,209,197,0.10); border-color:rgba(79,209,197,0.28);}
+  .feat p{margin:0 0 14px; color:var(--text-dim); font-size:14px; line-height:1.65;}
+  .feat pre{margin-top:auto; font-size:12.5px; padding:14px 16px;}
+  .feat pre code{font-size:12.5px;}
+
+  /* HOW IT WORKS */
+  .flow{display:flex; flex-direction:column; gap:2px;}
+  .flow-item{display:flex; gap:24px; align-items:flex-start; padding:20px 0; border-bottom:1px solid var(--panel-border);}
+  .flow-item:last-child{border-bottom:none;}
+  .flow-key{
+    flex:0 0 190px; font-family:var(--mono); font-size:12.5px; color:var(--accent-2);
+    padding-top:2px; letter-spacing:0.3px;
+  }
+  .flow-val{color:var(--text-dim); font-size:14.5px; line-height:1.7; min-width:0;}
+  .flow-val b{color:var(--text); font-weight:600;}
+  .flow-val code{font-size:13px; color:#c9d6e3;}
+  @media (max-width:700px){
+    .flow-item{flex-direction:column; gap:8px;}
+    .flow-key{flex:none;}
+  }
+
   /* GETTING STARTED */
   .steps{display:flex; flex-direction:column; gap:0;}
   .step{display:flex; gap:22px; padding:26px 0; border-bottom:1px solid var(--panel-border);}
@@ -203,11 +245,17 @@
 
 <header class="nav">
   <div class="nav-inner">
-    <div class="brand"><span class="flame">⚡</span> AhuraRTOS</div>
+    <div class="brand">
+      <img class="brand-mark" src="logo.jpg" alt=""
+           onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
+      <span class="flame" style="display:none">⚡</span>
+      AhuraRTOS
+    </div>
     <nav class="links">
       <a href="#highlights">Highlights</a>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
       <a href="#getting-started">Getting Started</a>
-      <a href="#architecture">Architecture</a>
       <a href="#roadmap">Roadmap</a>
     </nav>
     <div class="nav-cta">
@@ -219,6 +267,8 @@
 
 <section class="hero">
   <div class="wrap">
+    <img class="hero-mark" src="logo.jpg" alt="AhuraRTOS logo"
+         onerror="this.style.display='none'">
     <div class="status-pill"><span class="dot"></span> Early &amp; under active development — Cortex-M functional today</div>
     <h1 class="title">The <span class="grad">Prince</span> of RTOS</h1>
     <p class="subtitle">
@@ -228,6 +278,7 @@
     </p>
     <div class="hero-ctas">
       <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">⭐ View on GitHub</a>
+      <a class="btn btn-ghost btn-lg" href="#features">Features</a>
       <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/ahura_kernel" target="_blank" rel="noopener">Kernel Source</a>
       <a class="btn btn-ghost btn-lg" href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
       <a class="btn btn-ghost btn-lg" href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
@@ -306,6 +357,288 @@
         <h3>Single public header</h3>
         <p><code>ahura.h</code> plus one application-owned <code>os_config.h</code>, copied from a template. The kernel ships no configuration of its own.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="eyebrow">The whole API</div>
+    <h2 class="h2">Every feature, and the switch that removes it</h2>
+    <p class="lede">Each group below is one <code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> away from being compiled out entirely — code, RAM and API surface, not just skipped at runtime. Everything is declared in a single header, <code>ahura.h</code>. For the exhaustive reference — every parameter, every status code, every constraint — see the <a href="https://github.com/AhuraRTOS/ahura_kernel/blob/main/README.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel README</a>.</p>
+
+    <div class="feat-grid">
+
+      <div class="feat">
+        <h3>Tasks and the scheduler</h3>
+        <span class="cfg always">always compiled in</span>
+        <p>Preemptive and priority-based, with 31 levels, one FIFO ready list per priority and round-robin between equals. A task's stack and name belong to its handle, so creating one only says what it <em>does</em>.</p>
+        <pre><code><span class="cm">/* file scope: handle + stack, initialized at compile time */</span>
+OS_TASK_DEFINE(worker, 512U);
+
+os_task_create(&amp;worker,
+    OS_TASK_CONFIG(worker_entry, NULL, OS_TASK_PRIO_2));
+os_task_start(&amp;worker);
+os_task_pause(&amp;worker);
+os_task_delete(&amp;worker);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Delays and time</h3>
+        <span class="cfg always">always compiled in</span>
+        <p>Blocking delays yield the CPU once the scheduler runs and fall back to a precise busy-wait before it does. Microsecond waits are cycle-counted. None of them return a status — a delay either waits, or the request was one the platform cannot express and an assertion says so.</p>
+        <pre><code>os_delay_ms(500U);
+os_delay_us(200U);          <span class="cm">/* busy-wait, cycle-accurate */</span>
+os_delay_s(1U);
+os_delay_ms(OS_WAIT_FOREVER); <span class="cm">/* park this task */</span>
+
+uint32_t now = os_tick_get();</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Mutexes with priority inheritance</h3>
+        <span class="cfg">OS_CONFIG_MUTEX_ENABLE</span>
+        <p>Inheritance is always on, the way FreeRTOS and Zephyr do it: a lower-priority owner is boosted to the blocking waiter's priority until it releases. Stays correct when one task holds several contended mutexes at once.</p>
+        <pre><code>static os_mutex_t lock;
+
+os_mutex_init(&amp;lock);
+os_mutex_lock(&amp;lock, 100U);   <span class="cm">/* ms, or OS_WAIT_FOREVER */</span>
+os_mutex_try_lock(&amp;lock);     <span class="cm">/* never blocks */</span>
+os_mutex_unlock(&amp;lock);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Counting semaphores</h3>
+        <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE</span>
+        <p>Initial and maximum count, with the same <code>timeout_ms</code> convention as everything else: try once, wait a while, or wait forever. Giving is ISR-safe.</p>
+        <pre><code>static os_semaphore_t sem;
+
+os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
+os_semaphore_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
+os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Queues</h3>
+        <span class="cfg">OS_CONFIG_QUEUE_ENABLE</span>
+        <p>Fixed-size items copied between tasks, or from an ISR to a task. Which macro declares a queue decides where its buffer comes from — and neither compile-time form takes an item size or a capacity, because both are read off the array and so cannot disagree with it.</p>
+        <pre><code><span class="cm">/* static: usable where it stands, nothing to call */</span>
+OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);
+
+<span class="cm">/* your own buffer — a linker section, DMA RAM */</span>
+OS_QUEUE_DEFINE_BUFFER(rx_q, dma_area);
+
+<span class="cm">/* heap, for a run-time geometry */</span>
+OS_QUEUE_DEFINE_DYNAMIC(log_q);
+os_queue_init_dynamic(&amp;log_q, sizeof(entry_t), n);
+
+os_queue_send(&amp;sensor_q, &amp;sample, 10U);
+os_queue_receive(&amp;sensor_q, &amp;out, OS_WAIT_FOREVER);
+os_queue_cleanup(&amp;log_q);   <span class="cm">/* any kind */</span></code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Event groups</h3>
+        <span class="cfg">OS_CONFIG_EVENT_ENABLE</span>
+        <p>Wait on a set of bits, for all of them or any of them, optionally clearing what matched on the way out. The classic fan-in primitive when several producers must each report done.</p>
+        <pre><code>static os_event_group_t evt;
+uint32_t matched;
+
+os_event_group_init(&amp;evt);
+os_event_group_set_bits(&amp;evt, 0x1U);      <span class="cm">/* ISR-safe */</span>
+os_event_group_wait_bits(&amp;evt, 0x7U,
+                         true,   <span class="cm">/* wait for all  */</span>
+                         true,   <span class="cm">/* clear on exit */</span>
+                         &amp;matched, 500U);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Task notifications</h3>
+        <span class="cfg">OS_CONFIG_TASK_NOTIFY_ENABLE</span>
+        <p>A single-value mailbox built into every task's own control block, so one task or an ISR can signal a specific task without allocating an object for it. The lightest signal the kernel has.</p>
+        <pre><code>os_task_notify_give(&amp;worker, 42U);   <span class="cm">/* ISR-safe */</span>
+
+uint32_t value;
+os_task_notify_wait(OS_WAIT_FOREVER, &amp;value);
+
+<span class="cm">/* NULL when only the wake-up matters */</span>
+os_task_notify_wait(OS_WAIT_FOREVER, NULL);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Software timers</h3>
+        <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
+        <p>One-shot or periodic, with callbacks running on a dedicated kernel task rather than in the tick interrupt. Periods reload in the tick, so a periodic timer does not drift with callback latency.</p>
+        <pre><code>static os_timer_t t;
+
+os_timer_init(&amp;t, OS_TICKS_FROM_MS(250U),
+              OS_TIMER_MODE_PERIODIC, on_expiry, NULL);
+
+os_timer_start(&amp;t);     <span class="cm">/* or resume a pause */</span>
+os_timer_restart(&amp;t);   <span class="cm">/* always a full period */</span>
+os_timer_pause(&amp;t);     <span class="cm">/* keeps the time left */</span>
+os_timer_stop(&amp;t);
+os_timer_delete(&amp;t);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Deferrable work queue</h3>
+        <span class="cfg">OS_CONFIG_WORK_ENABLE</span>
+        <p>Hand a function to the kernel to run later, from an ISR if you like. There is no work object to declare or keep alive: the handler <em>and</em> its payload are copied into a kernel slot, so a local buffer may go out of scope the moment the call returns.</p>
+        <pre><code>static void handler(void *data, size_t len);
+
+my_payload_t payload = { ... };   <span class="cm">/* an ordinary local */</span>
+
+os_work_submit(handler, &amp;payload, sizeof(payload), 100U);
+os_work_submit(handler, NULL, 0U, 0U);   <span class="cm">/* no payload */</span></code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Atomics</h3>
+        <span class="cfg">OS_CONFIG_ATOMIC_ENABLE</span>
+        <p>A full operation set on a 32-bit word, every one returning the value from <em>before</em> it ran. Lock-free where the core has exclusive load/store; a critical section where it does not — the API and its behaviour are identical either way.</p>
+        <pre><code>static os_atomic_t counter = OS_ATOMIC_INIT(0);
+
+os_atomic_inc(&amp;counter);        <span class="cm">/* returns the OLD value */</span>
+os_atomic_add(&amp;counter, 5);
+os_atomic_or(&amp;flags, 0x4);
+os_atomic_cas(&amp;counter, 10, 20);
+os_atomic_set_bit(&amp;flags, 3U);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Kernel heap</h3>
+        <span class="cfg">OS_CONFIG_ALLOC_ENABLE</span>
+        <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>. Nothing is taken from the linker heap, and the whole thing compiles out when unused.</p>
+        <pre><code>void *p = os_mem_alloc(64U);
+os_mem_free(p);
+
+size_t free_now  = os_mem_free_get();
+size_t worst_ever = os_mem_watermark_get();</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Stack overflow detection</h3>
+        <span class="cfg">OS_CONFIG_STACK_CHECK_ENABLE</span>
+        <p>On every switch away from a task the kernel checks its stack pointer is still inside its own stack and that a guard word at the bottom is intact, then parks the core on a hit. ARMv8-M mainline traps this in hardware; on every other core this is the only detection there is.</p>
+        <pre><code><span class="cm">/* optional — the kernel parks either way */</span>
+void os_stack_overflow_cb(const char *task_name)
+{
+    <span class="cm">/* write it somewhere: UART, retained RAM, bkpt */</span>
+}</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Diagnostics</h3>
+        <span class="cfg">OS_CONFIG_STACK_WATERMARK_ENABLE · OS_CONFIG_CPU_USAGE_ENABLE</span>
+        <p>Stack watermarking pattern-fills each stack at creation and reports the worst-case headroom a task has ever had. CPU sampling counts how many ticks interrupted the idle task versus anything else. Both opt-in, both close to free.</p>
+        <pre><code>size_t min_free;
+os_task_stack_watermark_get(task, &amp;min_free);
+
+uint32_t percent = os_cpu_usage_get();  <span class="cm">/* since last call */</span></code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Logging and assertions</h3>
+        <span class="cfg">OS_CONFIG_LOG_ENABLE · OS_CONFIG_ASSERT_ENABLE</span>
+        <p>Log calls format into a ring buffer and a dedicated task drains it, so a logging task is never blocked on the transport. Assertions call your hook and then park the core — the kernel ships no default, so forgetting it is a link error rather than an unexplained halt.</p>
+        <pre><code>OS_LOG_INFO("sensor = %d", value);
+OS_LOG_ERROR("i2c timeout on 0x%02X", addr);
+
+uint32_t lost = os_log_dropped_get();
+
+OS_ASSERT(index &lt; count);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>TrustZone</h3>
+        <span class="cfg">OS_CONFIG_TRUSTZONE</span>
+        <p>Secure, non-secure or disabled, chosen per build on ARMv8-M. In non-secure mode the context switch banks each task's secure state through weak callbacks, so only tasks that actually call into secure code pay for it.</p>
+        <pre><code>#define OS_CONFIG_TRUSTZONE  OS_CONFIG_TRUSTZONE_NON_SECURE
+
+void os_arch_tz_context_save_cb(uint32_t task_id);
+void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Multi-core and tickless <span style="color:var(--text-faint); font-weight:400;">(experimental)</span></h3>
+        <span class="cfg">OS_CONFIG_CORE_COUNT · OS_CONFIG_TICKLESS_ENABLE</span>
+        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists; it compiles and is exercised in CI but has not run on real multi-core silicon. Tickless idle suppresses the tick across a known-idle window — implemented on the ARMv8-M port, not yet wired into the idle task.</p>
+        <pre><code>OS_TASK_CONFIG(entry, NULL, prio,
+               OS_TASK_CORE(0) | OS_TASK_CORE(2));
+
+void os_tickless_pre_sleep_cb(void);   <span class="cm">/* gate clocks */</span>
+void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span></code></pre>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="how-it-works">
+  <div class="wrap">
+    <div class="eyebrow">Under the hood</div>
+    <h2 class="h2">How it works</h2>
+    <p class="lede">A preemptive kernel is mostly three mechanisms: something that decides who runs, something that switches to them, and something that measures time. Here is what each one is in AhuraRTOS.</p>
+
+    <div class="flow">
+
+      <div class="flow-item">
+        <div class="flow-key">choosing a task</div>
+        <div class="flow-val">
+          One <b>FIFO ready list per priority</b>, plus a <b>32-bit bitmap</b> where bit <i>n</i> means "priority <i>n</i> has someone ready". Picking the next task is one count-leading-zeros on the bitmap and then the head of that list — <b>O(1)</b>, whatever the task count. Equal priorities rotate round-robin, because a preempted task goes back to the tail of its own list.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">switching to it</div>
+        <div class="flow-val">
+          The switch lives in <b>PendSV</b>, the lowest-priority exception, so it can never preempt an ISR — a real switch always happens after every pending interrupt has finished. <code>SVC</code> starts the very first task. The hardware stacks half the frame; the port stacks the rest (<code>r4-r11</code>, <code>EXC_RETURN</code>, and the FPU registers only when that task has actually used the FPU).
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">measuring time</div>
+        <div class="flow-val">
+          <code>SysTick</code> drives one counter. Each tick advances delayed tasks, software timers and the work queue, then pends PendSV <b>only if that tick actually made someone runnable</b> — a quiescent tick costs a bitmap check instead of a full switch. Only finite sleepers sit in the delay list, so the cost is proportional to tasks that are sleeping, not to tasks that exist.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">storing tasks</div>
+        <div class="flow-val">
+          A <b>fixed array</b> of control blocks, sized at compile time — no allocation, ever. The intrusive scheduling lists thread through nodes embedded <i>inside</i> those blocks, so a task is an array element and a list member at once with nothing allocated for either. Handles carry an id rather than a pointer, which is what lets the kernel reject a stale handle instead of following it.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">blocking</div>
+        <div class="flow-val">
+          Every wait — mutex, semaphore, queue, event group, notification — takes the same shape: check the condition inside a critical section, and if it is not met, join the object's waiter list <i>in that same section</i>. There is no window in which a signal can arrive unseen. Timeouts are recomputed against the wall clock on each pass, so time spent merely READY still counts against the budget.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">deferred callbacks</div>
+        <div class="flow-val">
+          Timer callbacks and work handlers never run in interrupt context. Each has its own <b>kernel service task</b> at the top priority, woken directly by the tick through a cached control-block pointer. So a callback may use kernel APIs like any other task — but it preempts everything, so it should be short.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">what the port owns</div>
+        <div class="flow-val">
+          Only what the CPU actually decides: the context switch, the tick, the critical-section mask, the atomic operations and the low-power hooks. Everything above that is ordinary portable C. That boundary is why the whole Cortex-M range, M0 through M85, is covered by <b>three</b> shared port files — and why a new architecture is a new port rather than a kernel change.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">configuration</div>
+        <div class="flow-val">
+          One application-owned <code>os_config.h</code>, copied from a template, visible to both the application and the kernel library so their structure sizes can never disagree. Every option is a plain define, and an incomplete file is a compile error rather than a silently disabled feature. The kernel itself ships <b>no</b> editable configuration.
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -409,6 +742,7 @@ add_subdirectory(kernel)</code></pre>
     <p>The kernel is functional and self-testing across the Cortex-M range. APIs may still change.</p>
     <div class="hero-ctas" style="margin-bottom:0;">
       <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">Explore the Repository</a>
+      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/ahura_kernel/blob/main/README.md" target="_blank" rel="noopener">Full Kernel Reference</a>
       <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/issues" target="_blank" rel="noopener">Open an Issue</a>
     </div>
   </div>
