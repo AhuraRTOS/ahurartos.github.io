@@ -378,7 +378,7 @@
       <div class="card">
         <div class="icon">⏱</div>
         <h3>Preemptive, priority-based scheduler</h3>
-        <p>O(1) list-based scheduling with one FIFO ready list per priority, a ready bitmap for O(1) next-task lookup, and round-robin among equal priorities.</p>
+        <p>O(1) list-based scheduling with one FIFO ready list per priority, a ready bitmap for O(1) next-task lookup, and round-robin among equal priorities over a configurable time slice. A scheduler lock defers preemption without masking a single interrupt.</p>
       </div>
       <div class="card">
         <div class="icon">🧩</div>
@@ -397,8 +397,8 @@
       </div>
       <div class="card">
         <div class="icon">🧠</div>
-        <h3>Kernel heap &amp; fixed-block pools</h3>
-        <p>A coalescing first-fit allocator plus O(1) memory pools for hot fixed-size objects.</p>
+        <h3>Kernel heap</h3>
+        <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>, compiled out entirely when unused.</p>
       </div>
       <div class="card">
         <div class="icon">🔒</div>
@@ -437,7 +437,7 @@
       <div class="feat">
         <h3>Tasks and the scheduler</h3>
         <span class="cfg always">always compiled in</span>
-        <p>Preemptive and priority-based, with 31 levels, one FIFO ready list per priority and round-robin between equals. A task's stack and name belong to its handle, so creating one only says what it <em>does</em>.</p>
+        <p>Preemptive and priority-based, with 31 levels, one FIFO ready list per priority and round-robin between equals over a time slice you set (<code>OS_CONFIG_TIME_SLICE_TICKS</code>, or 0 to turn rotation off). A task's stack and name belong to its handle, so creating one only says what it <em>does</em>. The kernel's own service tasks refuse pause and delete.</p>
         <pre><code><span class="cm">/* file scope: handle + stack, initialized at compile time */</span>
 OS_TASK_DEFINE(worker, 512U);
 
@@ -446,6 +446,18 @@ os_task_create(&amp;worker,
 os_task_start(&amp;worker);
 os_task_pause(&amp;worker);
 os_task_delete(&amp;worker);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Critical sections &amp; scheduler lock</h3>
+        <span class="cfg always">always compiled in</span>
+        <p>Two preemption barriers, and they are not interchangeable. A critical section masks interrupts, so it stops everything — the tick, the drivers, every latency budget that depends on them. A scheduler lock stops only the scheduler: interrupts keep running and keep waking tasks, they just do not get the CPU until the outermost unlock, which then takes the switch it deferred. Guard task-to-task data with the lock; anything an ISR also touches still needs the critical section.</p>
+        <pre><code>os_critical_enter();   <span class="cm">/* task &lt;-&gt; ISR, and across cores */</span>
+os_critical_exit();
+
+os_scheduler_lock();   <span class="cm">/* task &lt;-&gt; task, interrupts stay live */</span>
+rebuild_shared_state();
+os_scheduler_unlock(); <span class="cm">/* deferred switch happens here */</span></code></pre>
       </div>
 
       <div class="feat">
@@ -499,6 +511,10 @@ os_queue_init_dynamic(&amp;log_q, sizeof(entry_t), n);
 
 os_queue_send(&amp;sensor_q, &amp;sample, 10U);
 os_queue_receive(&amp;sensor_q, &amp;out, OS_WAIT_FOREVER);
+
+size_t used = os_queue_count_get(&amp;sensor_q);
+size_t room = os_queue_free_get(&amp;sensor_q);  <span class="cm">/* back-pressure */</span>
+
 os_queue_cleanup(&amp;log_q);   <span class="cm">/* any kind */</span></code></pre>
       </div>
 
@@ -506,28 +522,28 @@ os_queue_cleanup(&amp;log_q);   <span class="cm">/* any kind */</span></code></p
         <h3>Event groups</h3>
         <span class="cfg">OS_CONFIG_EVENT_ENABLE</span>
         <p>Wait on a set of bits, for all of them or any of them, optionally clearing what matched on the way out. The classic fan-in primitive when several producers must each report done.</p>
-        <pre><code>static os_event_group_t evt;
+        <pre><code>static os_event_t evt;
 uint32_t matched;
 
-os_event_group_init(&amp;evt);
-os_event_group_set_bits(&amp;evt, 0x1U);      <span class="cm">/* ISR-safe */</span>
-os_event_group_wait_bits(&amp;evt, 0x7U,
-                         true,   <span class="cm">/* wait for all  */</span>
-                         true,   <span class="cm">/* clear on exit */</span>
-                         &amp;matched, 500U);</code></pre>
+os_event_init(&amp;evt);
+os_event_set_bits(&amp;evt, 0x1U);      <span class="cm">/* ISR-safe */</span>
+os_event_wait_bits(&amp;evt, 0x7U,
+                   true,   <span class="cm">/* wait for all  */</span>
+                   true,   <span class="cm">/* clear on exit */</span>
+                   &amp;matched, 500U);</code></pre>
       </div>
 
       <div class="feat">
         <h3>Task notifications</h3>
-        <span class="cfg">OS_CONFIG_TASK_NOTIFY_ENABLE</span>
+        <span class="cfg">OS_CONFIG_NOTIFY_ENABLE</span>
         <p>A single-value mailbox built into every task's own control block, so one task or an ISR can signal a specific task without allocating an object for it. The lightest signal the kernel has.</p>
-        <pre><code>os_task_notify_give(&amp;worker, 42U);   <span class="cm">/* ISR-safe */</span>
+        <pre><code>os_notify_give(&amp;worker, 42U);   <span class="cm">/* ISR-safe */</span>
 
 uint32_t value;
-os_task_notify_wait(OS_WAIT_FOREVER, &amp;value);
+os_notify_wait(OS_WAIT_FOREVER, &amp;value);
 
 <span class="cm">/* NULL when only the wake-up matters */</span>
-os_task_notify_wait(OS_WAIT_FOREVER, NULL);</code></pre>
+os_notify_wait(OS_WAIT_FOREVER, NULL);</code></pre>
       </div>
 
       <div class="feat">
@@ -586,7 +602,8 @@ size_t worst_ever = os_mem_watermark_get();</code></pre>
         <h3>Stack overflow detection</h3>
         <span class="cfg">OS_CONFIG_STACK_CHECK_ENABLE</span>
         <p>On every switch away from a task the kernel checks its stack pointer is still inside its own stack and that a guard word at the bottom is intact, then parks the core on a hit. ARMv8-M mainline traps this in hardware; on every other core this is the only detection there is.</p>
-        <pre><code><span class="cm">/* optional — the kernel parks either way */</span>
+        <pre><code><span class="cm">/* you define it; no kernel default, so a missing
+   one is a link error rather than a silent detector */</span>
 void os_stack_overflow_cb(const char *task_name)
 {
     <span class="cm">/* write it somewhere: UART, retained RAM, bkpt */</span>
@@ -653,7 +670,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <div class="flow-item">
         <div class="flow-key">choosing a task</div>
         <div class="flow-val">
-          One <b>FIFO ready list per priority</b>, plus a <b>32-bit bitmap</b> where bit <i>n</i> means "priority <i>n</i> has someone ready". Picking the next task is one count-leading-zeros on the bitmap and then the head of that list — <b>O(1)</b>, whatever the task count. Equal priorities rotate round-robin, because a preempted task goes back to the tail of its own list.
+          One <b>FIFO ready list per priority</b>, plus a <b>32-bit bitmap</b> where bit <i>n</i> means "priority <i>n</i> has someone ready". Picking the next task is one count-leading-zeros on the bitmap and then the head of that list — <b>O(1)</b>, whatever the task count. Equal priorities rotate round-robin, because a preempted task goes back to the tail of its own list; how long a task holds the CPU before that happens is the time slice, and a tick that would not switch anything costs one bitmap check instead of a full <code>PendSV</code> round trip.
         </div>
       </div>
 
