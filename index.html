@@ -43,7 +43,7 @@
   "applicationCategory": "DeveloperApplication",
   "applicationSubCategory": "Real-time operating system",
   "operatingSystem": "Bare metal (ARM Cortex-M)",
-  "description": "A small, open-source preemptive real-time operating system for embedded systems. Priority-based scheduling, mutexes with priority inheritance, semaphores, queues, event groups, software timers and a deferrable work queue, on ARM Cortex-M M0 through M85.",
+  "description": "A small, open-source preemptive real-time operating system for embedded systems. Priority-based scheduling, mutexes with priority inheritance, semaphores, queues, events, software timers and a deferrable work queue, on ARM Cortex-M M0 through M85.",
   "url": "https://ahurartos.github.io/",
   "image": "https://ahurartos.github.io/logo.jpg",
   "codeRepository": "https://github.com/AhuraRTOS/AhuraRTOS",
@@ -388,7 +388,7 @@
       <div class="card">
         <div class="icon">🔗</div>
         <h3>IPC, sync &amp; task notifications</h3>
-        <p>Mutexes with priority inheritance, semaphores, queues, event groups, and lightweight per-task notifications — all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
+        <p>Mutexes with priority inheritance, semaphores, queues, events, and lightweight per-task notifications — all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
       </div>
       <div class="card">
         <div class="icon">🛎</div>
@@ -519,7 +519,7 @@ os_queue_cleanup(&amp;log_q);   <span class="cm">/* any kind */</span></code></p
       </div>
 
       <div class="feat">
-        <h3>Event groups</h3>
+        <h3>Events</h3>
         <span class="cfg">OS_CONFIG_EVENT_ENABLE</span>
         <p>Wait on a set of bits, for all of them or any of them, optionally clearing what matched on the way out. The classic fan-in primitive when several producers must each report done.</p>
         <pre><code>static os_event_t evt;
@@ -698,7 +698,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <div class="flow-item">
         <div class="flow-key">blocking</div>
         <div class="flow-val">
-          Every wait — mutex, semaphore, queue, event group, notification — takes the same shape: check the condition inside a critical section, and if it is not met, join the object's waiter list <i>in that same section</i>. There is no window in which a signal can arrive unseen. Timeouts are recomputed against the wall clock on each pass, so time spent merely READY still counts against the budget.
+          Every wait — mutex, semaphore, queue, event, notification — takes the same shape: check the condition inside a critical section, and if it is not met, join the object's waiter list <i>in that same section</i>. There is no window in which a signal can arrive unseen. Timeouts are recomputed against the wall clock on each pass, so time spent merely READY still counts against the budget.
         </div>
       </div>
 
