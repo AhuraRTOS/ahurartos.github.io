@@ -485,6 +485,40 @@ os_mutex_unlock(&amp;lock);</code></pre>
       </div>
 
       <div class="feat">
+        <h3>Queues — heap-backed</h3>
+        <span class="cfg">OS_CONFIG_QUEUE_ENABLE · OS_CONFIG_ALLOC_ENABLE</span>
+        <p>The same queue with a geometry not known until run time — item size and capacity from a config word, a probed device, a parsed header. Only <code>os_queue_init_dynamic</code> needs the heap, so it is the one call that disappears with <code>OS_CONFIG_ALLOC_ENABLE</code>; everything else behaves identically. The queue object is still yours, only its buffer comes from the heap, which is why a failed init leaves nothing to clean up.</p>
+        <pre><code>OS_QUEUE_DEFINE_DYNAMIC(log_q);
+
+<span class="cm">/* geometry decided at run time */</span>
+os_queue_init_dynamic(&amp;log_q, sizeof(entry_t), n);
+
+os_queue_send(&amp;log_q, &amp;entry, 10U);       <span class="cm">/* same API */</span>
+os_queue_receive(&amp;log_q, &amp;out, OS_WAIT_FOREVER);
+
+os_queue_cleanup(&amp;log_q);   <span class="cm">/* returns the buffer to the heap */</span></code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Queues — static storage</h3>
+        <span class="cfg">OS_CONFIG_QUEUE_ENABLE</span>
+        <p>Fixed-size items copied between tasks, or from an ISR to a task. No heap involved: the buffer is an array the macro declares, so this is the whole queue API on a build with <code>OS_CONFIG_ALLOC_ENABLE</code> at 0. Neither compile-time form takes an item size or a capacity — both are read off the array and so cannot disagree with it.</p>
+        <pre><code><span class="cm">/* usable where it stands, nothing to call */</span>
+OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);
+
+<span class="cm">/* your own buffer — a linker section, DMA RAM */</span>
+OS_QUEUE_DEFINE_BUFFER(rx_q, dma_area);
+
+os_queue_send(&amp;sensor_q, &amp;sample, 10U);
+os_queue_receive(&amp;sensor_q, &amp;out, OS_WAIT_FOREVER);
+
+size_t used = os_queue_count_get(&amp;sensor_q);
+size_t room = os_queue_free_get(&amp;sensor_q);  <span class="cm">/* back-pressure */</span>
+
+os_queue_cleanup(&amp;sensor_q);  <span class="cm">/* empties, keeps the array */</span></code></pre>
+      </div>
+
+      <div class="feat">
         <h3>Counting semaphores</h3>
         <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE</span>
         <p>Initial and maximum count, with the same <code>timeout_ms</code> convention as everything else: try once, wait a while, or wait forever. Giving is ISR-safe.</p>
@@ -493,29 +527,6 @@ os_mutex_unlock(&amp;lock);</code></pre>
 os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
 os_semaphore_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
 os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Queues</h3>
-        <span class="cfg">OS_CONFIG_QUEUE_ENABLE</span>
-        <p>Fixed-size items copied between tasks, or from an ISR to a task. Which macro declares a queue decides where its buffer comes from — and neither compile-time form takes an item size or a capacity, because both are read off the array and so cannot disagree with it.</p>
-        <pre><code><span class="cm">/* static: usable where it stands, nothing to call */</span>
-OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);
-
-<span class="cm">/* your own buffer — a linker section, DMA RAM */</span>
-OS_QUEUE_DEFINE_BUFFER(rx_q, dma_area);
-
-<span class="cm">/* heap, for a run-time geometry */</span>
-OS_QUEUE_DEFINE_DYNAMIC(log_q);
-os_queue_init_dynamic(&amp;log_q, sizeof(entry_t), n);
-
-os_queue_send(&amp;sensor_q, &amp;sample, 10U);
-os_queue_receive(&amp;sensor_q, &amp;out, OS_WAIT_FOREVER);
-
-size_t used = os_queue_count_get(&amp;sensor_q);
-size_t room = os_queue_free_get(&amp;sensor_q);  <span class="cm">/* back-pressure */</span>
-
-os_queue_cleanup(&amp;log_q);   <span class="cm">/* any kind */</span></code></pre>
       </div>
 
       <div class="feat">
