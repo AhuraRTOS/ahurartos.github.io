@@ -318,7 +318,8 @@
       <a href="#highlights">Highlights</a>
       <a href="#features">Features</a>
       <a href="#how-it-works">How it works</a>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#getting-started">Install</a>
+      <a href="#verify">Verify</a>
       <a href="#roadmap">Roadmap</a>
     </nav>
     <div class="nav-cta">
@@ -689,7 +690,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <div class="flow-item">
         <div class="flow-key">switching to it</div>
         <div class="flow-val">
-          The switch lives in <b>PendSV</b>, the lowest-priority exception, so it can never preempt an ISR - a real switch always happens after every pending interrupt has finished. <code>SVC</code> starts the very first task. The hardware stacks half the frame; the port stacks the rest (<code>r4-r11</code>, <code>EXC_RETURN</code>, and the FPU registers only when that task has actually used the FPU).
+          The switch lives in <b>PendSV</b>, the lowest-priority exception, so it can never preempt an ISR - a real switch always happens after every pending interrupt has finished. It is the <b>only</b> exception the kernel takes over: the very first task starts through the same handler, down its "no task has run yet" path, which leaves <code>SVC</code> entirely to the application. The hardware stacks half the frame; the port stacks the rest (<code>r4-r11</code>, <code>EXC_RETURN</code>, and the FPU registers only when that task has actually used the FPU).
         </div>
       </div>
 
@@ -741,46 +742,124 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 
 <section class="section" id="getting-started">
   <div class="wrap">
-    <div class="eyebrow">Quick Start</div>
-    <h2 class="h2">Up and running in four steps</h2>
-    <p class="lede">Full configuration options, the integration checklist, task-priority rules, and every module's API live in <code>kernel/README.md</code> - the authoritative reference.</p>
+    <div class="eyebrow">Installation</div>
+    <h2 class="h2">Six steps, and only two touch the device</h2>
+    <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract, and it is why the same kernel drops onto an STM32, an nRF52 and an LPC without changing anything but a config file.</p>
+
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-body">
-          <h4>Add the kernel as a submodule</h4>
-          <p>Already the case in this repo - see <code>.gitmodules</code>.</p>
-          <pre><code>git submodule update --init --recursive</code></pre>
+          <h4>Get the source</h4>
+          <p>As a submodule of your own project - recommended, since updates stay a <code>git pull</code> away.</p>
+          <pre><code>git submodule add https://github.com/AhuraRTOS/ahura_kernel.git AhuraRTOS/kernel
+git submodule update --init --recursive</code></pre>
+          <p>A plain copy of the <code>kernel/</code> directory works too - nothing in the build is git-specific.</p>
         </div>
       </div>
+
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-body">
-          <h4>Configure your project</h4>
-          <p>Copy <code>kernel/os_config_template.h</code> into your project as <code>os_config.h</code> and point the kernel build at it.</p>
-          <pre><code>set(OS_CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc)
-add_subdirectory(kernel)</code></pre>
+          <h4>Copy three files into your project</h4>
+          <p>The kernel deliberately compiles none of these: two are your code, one is your configuration. Their locations do not matter, only that the build can see them.</p>
+          <pre><code>kernel/os_config_template.h  -&gt;  os_config.h   (a header; nothing to compile)
+kernel/os_cb_template.c      -&gt;  os_cb.c       (add to the APPLICATION build)
+kernel/os_main_template.c    -&gt;  os_main.c     (add to the APPLICATION build)</code></pre>
+          <p><code>os_config.h</code> is every build-time option at its default - edit it in place. <code>os_cb.c</code> holds the platform callbacks, and <code>os_main.c</code> is where your application code goes.</p>
         </div>
       </div>
+
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-body">
-          <h4>Add the application templates</h4>
-          <p>Copy <code>kernel/os_cb_template.c</code> (platform callbacks) and <code>kernel/os_main_template.c</code> (default task body) into your application source tree as <code>os_cb.c</code> and <code>os_main.c</code>, and add both to your application build.</p>
+          <h4>Add the kernel to the build</h4>
+          <p><code>OS_CONFIG_DIR</code> must be set <em>before</em> <code>add_subdirectory</code>, so the kernel library and your application compile against the same configuration. If only the application saw <code>os_config.h</code>, their structure sizes would silently disagree.</p>
+          <pre><code>set(OS_CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc)
+add_subdirectory(AhuraRTOS/kernel)
+
+target_sources(my_firmware PRIVATE Core/Src/os_cb.c Core/Src/os_main.c)
+target_link_libraries(my_firmware ahura_kernel)</code></pre>
+          <p><strong>Not using CMake?</strong> Nothing here requires it. The kernel is plain C11 with no generated sources, so Keil, IAR-style projects, MPLAB X, SEGGER Embedded Studio or a hand-written Makefile all work: compile every <code>core/*.c</code> plus <strong>one</strong> <code>arch/arm/&lt;core&gt;/os_arch_port.c</code> matching your device, and add three include paths.</p>
         </div>
       </div>
+
       <div class="step">
         <div class="step-num">4</div>
         <div class="step-body">
-          <h4>Wire up the tick and boot the kernel</h4>
-          <p>Route <code>SysTick_Handler</code> to <code>os_tick_handler()</code>, call <code>os_init()</code> after clocks are configured, then <code>os_start()</code>.</p>
+          <h4>Give the kernel its tick</h4>
+          <p>On a stock CMSIS device that is one line, anywhere in your interrupt file.</p>
+          <pre><code>void SysTick_Handler(void) { os_tick_handler(); }</code></pre>
+          <p>Where SysTick is unavailable or already taken - Nordic nRF5x, whose SysTick stops in sleep, is the classic case - set <code>OS_CONFIG_TICK_SOURCE_EXTERNAL</code> and drive <code>os_tick_handler()</code> from any timer you like instead.</p>
+          <p>If a vendor HAL also wants SysTick, move one of them rather than sharing the handler. On STM32 that is <strong>CubeMX &rarr; SYS &rarr; Timebase Source &rarr; any spare timer</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h4>Make sure nothing else defines <code>PendSV_Handler</code></h4>
+          <p>Usually nothing does, and there is nothing to do - <code>PendSV_Handler</code> is the CMSIS-Pack name that every vendor startup file already puts in the vector table. The one common exception is a vendor IDE that generates an empty stub: <strong>STM32CubeMX does</strong>, and it is a checkbox.</p>
+          <pre><code>CubeMX -&gt; System Core -&gt; NVIC -&gt; Code generation tab
+       -&gt; clear "Generate IRQ handler" for
+          "Pendable request for system service"</code></pre>
+          <p>That setting lives in the <code>.ioc</code>, so regeneration keeps honouring it. The kernel verifies the live vector table at boot and traps immediately if it was not wired up, instead of hanging silently.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h4>Boot it</h4>
+          <p>From <code>main()</code>, after the clock tree is configured.</p>
+          <pre><code>int main(void)
+{
+    SystemClock_Config();   /* whatever your device needs */
+
+    os_init();
+    os_start();             /* never returns */
+}</code></pre>
+          <p><code>os_init()</code> has already created and started a default application task, so there is nothing else to create just to get moving. Write your code in <code>os_main()</code>.</p>
         </div>
       </div>
     </div>
+
+    <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in <code>kernel/README.md</code> - the authoritative reference.</p>
   </div>
 </section>
 
-<section class="section section-alt" id="architecture">
+<section class="section section-alt" id="verify">
+  <div class="wrap">
+    <div class="eyebrow">Verify</div>
+    <h2 class="h2">Prove the port before you build on it</h2>
+    <p class="lede">The kernel ships a self-test suite that exercises every enabled feature and reports PASS/FAIL over <code>printf</code>, finishing with a cycle-accurate benchmark table. It needs no application code and no board support beyond a working <code>printf</code>, which makes it the fastest way to confirm a new target is correctly integrated - before anything is built on top of it.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">1</div>
+        <h3>Turn it on</h3>
+        <p>In <code>os_config.h</code>. The test task replaces the default application task, so the suite runs alone and <code>os_main()</code> is never called.</p>
+        <pre><code>#define OS_CONFIG_TEST_ENABLE  1U</code></pre>
+      </div>
+      <div class="card">
+        <div class="icon">2</div>
+        <h3>Link the suite</h3>
+        <p>The kernel ships no stub for <code>os_test()</code>, not even a weak one, so forgetting this is a link error rather than a test build that silently tests nothing.</p>
+        <pre><code>add_subdirectory(AhuraRTOS/kernel/test)
+target_link_libraries(my_firmware os_test)</code></pre>
+      </div>
+      <div class="card">
+        <div class="icon">3</div>
+        <h3>Let the suite own the log hook</h3>
+        <p>With <code>OS_CONFIG_LOG_ENABLE</code> also on, the suite defines <code>os_log_output_cb</code> itself so it can inspect what the kernel emitted. Your <code>os_cb.c</code> steps aside - the current template already guards it.</p>
+        <pre><code>#if (OS_CONFIG_LOG_ENABLE == 1U) &amp;&amp; \
+    (OS_CONFIG_TEST_ENABLE == 0U)</code></pre>
+      </div>
+    </div>
+    <p class="lede" style="margin-top:26px;"><strong>Seeing nothing on the terminal?</strong> That is almost never the kernel. newlib buffers <code>stdout</code>, and on a target with no tty it buffers <em>fully</em> - the output sits in a 1 KB buffer that a kernel which never exits may never flush. Call <code>setvbuf(stdout, NULL, _IONBF, 0);</code> in <code>main()</code> before <code>os_init()</code>; that also avoids the <code>malloc</code> newlib would otherwise make for the buffer.</p>
+  </div>
+</section>
+
+<section class="section" id="architecture">
   <div class="wrap">
     <div class="two-col">
       <div>
@@ -806,7 +885,7 @@ add_subdirectory(kernel)</code></pre>
   </div>
 </section>
 
-<section class="section" id="roadmap">
+<section class="section section-alt" id="roadmap">
   <div class="wrap">
     <div class="eyebrow">Where it's headed</div>
     <h2 class="h2">Roadmap</h2>
