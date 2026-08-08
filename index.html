@@ -763,10 +763,10 @@ git submodule update --init --recursive</code></pre>
         <div class="step-body">
           <h4>Copy three files into your project</h4>
           <p>The kernel deliberately compiles none of these: two are your code, one is your configuration. Their locations do not matter, only that the build can see them.</p>
-          <pre><code>kernel/os_config_template.h  -&gt;  os_config.h   (a header; nothing to compile)
-kernel/os_cb_template.c      -&gt;  os_cb.c       (add to the APPLICATION build)
-kernel/os_main_template.c    -&gt;  os_main.c     (add to the APPLICATION build)</code></pre>
-          <p><code>os_config.h</code> is every build-time option at its default - edit it in place. <code>os_cb.c</code> holds the platform callbacks, and <code>os_main.c</code> is where your application code goes.</p>
+          <pre><code>AhuraRTOS/kernel/os_config_template.h  -&gt;  os_config.h  (a header; nothing to compile)
+AhuraRTOS/kernel/os_cb_template.c      -&gt;  os_cb.c      (add to the APPLICATION build)
+AhuraRTOS/kernel/os_main_template.c    -&gt;  os_main.c    (add to the APPLICATION build)</code></pre>
+          <p><code>os_config.h</code> is every build-time option at its default - edit it in place, and do not delete options: a missing one would read as <code>0</code> in an <code>#if</code> and silently disable a feature, so the kernel rejects an incomplete file instead. <code>os_cb.c</code> holds the platform callbacks - the kernel declares them and defines none, so a missing one is a link error rather than a silently empty hook - and <code>os_main.c</code> is where your application code goes.</p>
         </div>
       </div>
 
@@ -780,7 +780,8 @@ add_subdirectory(AhuraRTOS/kernel)
 
 target_sources(my_firmware PRIVATE Core/Src/os_cb.c Core/Src/os_main.c)
 target_link_libraries(my_firmware ahura_kernel)</code></pre>
-          <p><strong>Not using CMake?</strong> Nothing here requires it. The kernel is plain C11 with no generated sources, so Keil, IAR-style projects, MPLAB X, SEGGER Embedded Studio or a hand-written Makefile all work: compile every <code>core/*.c</code> plus <strong>one</strong> <code>arch/arm/&lt;core&gt;/os_arch_port.c</code> matching your device, and add three include paths.</p>
+          <p>Keep those lines together as <strong>one block appended after your existing target definitions</strong> rather than merged into them: <code>target_sources()</code> and <code>target_link_libraries()</code> both <em>append</em>, so the only ordering requirement is that the target already exists. A generator-owned <code>CMakeLists.txt</code> - CubeMX, MCUXpresso - then stays exactly as generated, and the integration is one block to review or remove. The kernel picks its own port from your <code>-mcpu</code> and says so: <code>-- Ahura kernel arch: cortex_m33</code>.</p>
+          <p><strong>Not using CMake?</strong> Nothing here requires it. The kernel is plain C11 with no generated sources, so Keil, IAR-style projects, MPLAB X, SEGGER Embedded Studio or a hand-written Makefile all work: compile every <code>core/*.c</code> plus <strong>one</strong> <code>arch/arm/&lt;core&gt;/os_arch_port.c</code> matching your device, and add three include paths. Do <strong>not</strong> add <code>arch/arm/common/*.c</code> - those are textual includes pulled in by that wrapper, and compiling them separately produces duplicate symbols.</p>
         </div>
       </div>
 
@@ -788,8 +789,11 @@ target_link_libraries(my_firmware ahura_kernel)</code></pre>
         <div class="step-num">4</div>
         <div class="step-body">
           <h4>Give the kernel its tick</h4>
-          <p>On a stock CMSIS device that is one line, anywhere in your interrupt file.</p>
-          <pre><code>void SysTick_Handler(void) { os_tick_handler(); }</code></pre>
+          <p>On a stock CMSIS device that is one line, anywhere in your interrupt file. <code>os_tick_handler()</code> is declared in <code>ahura.h</code>, the kernel's single public header.</p>
+          <pre><code>#include "ahura.h"
+
+void SysTick_Handler(void) { os_tick_handler(); }</code></pre>
+          <p>Give that interrupt the <strong>lowest</strong> priority the device offers - it drives preemption, so it must never preempt an application interrupt. The port already does this for SysTick.</p>
           <p>Where SysTick is unavailable or already taken - Nordic nRF5x, whose SysTick stops in sleep, is the classic case - set <code>OS_CONFIG_TICK_SOURCE_EXTERNAL</code> and drive <code>os_tick_handler()</code> from any timer you like instead.</p>
           <p>If a vendor HAL also wants SysTick, move one of them rather than sharing the handler. On STM32 that is <strong>CubeMX &rarr; SYS &rarr; Timebase Source &rarr; any spare timer</strong>.</p>
         </div>
@@ -824,6 +828,41 @@ target_link_libraries(my_firmware ahura_kernel)</code></pre>
       </div>
     </div>
 
+    <h3 style="margin-top:44px;">On STM32, in detail</h3>
+    <p class="lede" style="margin-top:10px;">ST tooling differs from every other vendor's in exactly two places, and both are CubeMX checkboxes rather than code. Everything below is verified end to end on a NUCLEO-H503RB generated as a CMake project.</p>
+
+    <div class="flow">
+
+      <div class="flow-item">
+        <div class="flow-key">free PendSV</div>
+        <div class="flow-val">
+          <b>System Core &rarr; NVIC &rarr; Code generation tab &rarr; clear "Generate IRQ handler"</b> for <i>Pendable request for system service</i>. CubeMX otherwise writes a non-weak empty <code>PendSV_Handler</code> into <code>Core/Src/stm32&lt;family&gt;_it.c</code>, which collides with the kernel's at link time. Deleting it by hand works until the next code generation; the checkbox lives in the <code>.ioc</code>, so regeneration keeps honouring it. Leave <i>System tick timer</i> generating - that is where the tick goes - and leave <code>SVC_Handler</code> alone, the kernel never uses it.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">move the HAL time base</div>
+        <div class="flow-val">
+          <b>System Core &rarr; SYS &rarr; Timebase Source &rarr; TIM7</b> (TIM6 and TIM17 are equally good). <code>HAL_Init()</code> otherwise claims SysTick for <code>HAL_GetTick()</code>, and the kernel needs it. CubeMX adds <code>stm32&lt;family&gt;_hal_timebase_tim.c</code>, and from then on <code>HAL_Delay()</code> runs off that timer while SysTick belongs to the kernel - so do <b>not</b> call <code>HAL_IncTick()</code> from <code>SysTick_Handler</code> afterwards. Note that <code>HAL_Delay()</code> still busy-waits: use <code>os_delay_ms()</code> in task code.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">survive regeneration</div>
+        <div class="flow-val">
+          Put the tick call and the <code>os_init()</code> / <code>os_start()</code> pair <b>inside the <code>USER CODE</code> markers</b> of <code>stm32&lt;family&gt;_it.c</code> and <code>main.c</code>, and CubeMX preserves them. Your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are safe unconditionally - CubeMX never touches files it did not generate - and <code>CMakeLists.txt</code> is generated once and never again.
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">boot order</div>
+        <div class="flow-val">
+          <code>os_init()</code> goes after the peripherals its callbacks depend on are up - on a Nucleo that means after <code>BSP_COM_Init()</code>, or the first log line goes nowhere - and after the clock tree, since it programs the tick from the live <code>SystemCoreClock</code>.
+        </div>
+      </div>
+
+    </div>
+
     <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in <code>kernel/README.md</code> - the authoritative reference.</p>
   </div>
 </section>
@@ -855,6 +894,34 @@ target_link_libraries(my_firmware os_test)</code></pre>
     (OS_CONFIG_TEST_ENABLE == 0U)</code></pre>
       </div>
     </div>
+    <div class="flow" style="margin-top:26px;">
+
+      <div class="flow-item">
+        <div class="flow-key">one switch, not two</div>
+        <div class="flow-val">
+          Rather than keep the define and the library in sync by hand, have CMake read the switch out of the config - and register <code>os_config.h</code> as a configure dependency, since a header is not otherwise a configure-time dependency and the build would go on linking the previous choice. Flipping the define then <i>is</i> the whole procedure.
+          <pre style="margin-top:14px;"><code>set_property(DIRECTORY APPEND PROPERTY
+             CMAKE_CONFIGURE_DEPENDS ${OS_CONFIG_DIR}/os_config.h)
+
+file(READ ${OS_CONFIG_DIR}/os_config.h _os_cfg)
+if(_os_cfg MATCHES "#define[ \t]+OS_CONFIG_TEST_ENABLE[ \t]+1")
+    add_subdirectory(AhuraRTOS/kernel/test)
+    set(AHURA_TEST_LIB os_test)
+endif()
+
+target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
+        </div>
+      </div>
+
+      <div class="flow-item">
+        <div class="flow-key">budget the flash</div>
+        <div class="flow-val">
+          The suite is deliberately exhaustive, and most of its footprint is the <code>.rodata</code> behind those PASS/FAIL strings: <b>roughly 100 KB at <code>-Os</code></b>, against about 20 KB for a small application. On a 128 KB part that means <b>run it from a Release (<code>-Os</code>) build</b> - measured on a NUCLEO-H503RB, the suite lands at 130 KB of 128 KB available at <code>-O0</code> and does not link, while <code>-Os</code> fits at 99%. The linker says so plainly rather than producing a broken image, and the suite already drops its extended stress tests (~15 KB) in unoptimized builds for the same reason. Parts with 256 KB or more take either. Once the port is verified, set the switch back to <code>0</code> and the suite leaves the image entirely.
+        </div>
+      </div>
+
+    </div>
+
     <p class="lede" style="margin-top:26px;"><strong>Seeing nothing on the terminal?</strong> That is almost never the kernel. newlib buffers <code>stdout</code>, and on a target with no tty it buffers <em>fully</em> - the output sits in a 1 KB buffer that a kernel which never exits may never flush. Call <code>setvbuf(stdout, NULL, _IONBF, 0);</code> in <code>main()</code> before <code>os_init()</code>; that also avoids the <code>malloc</code> newlib would otherwise make for the buffer.</p>
   </div>
 </section>
