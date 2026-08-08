@@ -242,18 +242,24 @@
     .flow-key{flex:none;}
   }
 
-  /* GETTING STARTED */
-  .steps{display:flex; flex-direction:column; gap:0;}
-  .step{display:flex; gap:22px; padding:26px 0; border-bottom:1px solid var(--panel-border);}
-  .step:last-child{border-bottom:none;}
-  .step-num{
-    flex:0 0 auto; width:34px; height:34px; border-radius:9px;
-    background:var(--accent-soft); color:var(--accent); border:1px solid rgba(240,168,40,0.3);
-    display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-weight:700; font-size:14px;
+  /* GETTING STARTED - the README owns the procedure; these only route to it */
+  .install-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
+  @media (max-width:860px){.install-grid{grid-template-columns:1fr;}}
+  .install-card{
+    display:block; text-decoration:none;
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
+    padding:26px; transition:border-color .2s ease, transform .2s ease;
   }
-  .step-body{flex:1; min-width:0;}
-  .step-body h4{margin:4px 0 8px; font-size:16px; font-weight:600;}
-  .step-body p{margin:0 0 12px; color:var(--text-dim); font-size:14.5px;}
+  .install-card:hover{border-color:rgba(240,168,40,0.45); transform:translateY(-3px);}
+  .install-card .ic-tag{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:1.4px; text-transform:uppercase;
+    color:var(--accent-2); margin-bottom:12px;
+  }
+  .install-card h4{margin:0 0 10px; font-size:17px; font-weight:600; color:var(--text);}
+  .install-card h4 .arw{color:var(--accent); transition:transform .2s ease; display:inline-block;}
+  .install-card:hover h4 .arw{transform:translateX(4px);}
+  .install-card p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.7;}
+  .install-card code{font-size:12.5px;}
   pre{
     background:#0a0e13; border:1px solid var(--panel-border); border-radius:10px;
     padding:16px 18px; overflow-x:auto; margin:0;
@@ -262,6 +268,18 @@
   pre code .cm{color:var(--text-faint);}
   pre code .kw{color:var(--accent-2);}
   pre code .fn{color:var(--accent);}
+
+  /* README POINTER - the README is the authoritative install guide; this page only summarizes it */
+  .readme-note{
+    display:flex; gap:18px; align-items:center; flex-wrap:wrap;
+    margin:0 0 40px; padding:20px 22px; border-radius:12px;
+    background:var(--accent-soft); border:1px solid rgba(240,168,40,0.28);
+  }
+  .readme-note .rn-icon{font-size:22px; line-height:1;}
+  .readme-note .rn-body{flex:1; min-width:260px; color:#e7d3a3; font-size:14.5px; line-height:1.65;}
+  .readme-note .rn-body b{color:var(--accent); font-weight:600;}
+  .readme-note .rn-body code{font-size:13px;}
+  .readme-note .btn{flex:0 0 auto;}
 
   /* ARCHITECTURE / TREE */
   .two-col{display:grid; grid-template-columns:1.1fr 1fr; gap:40px; align-items:start;}
@@ -324,7 +342,7 @@
     </nav>
     <div class="nav-cta">
       <a class="btn btn-ghost" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS#getting-started" target="_blank" rel="noopener">Get Started</a>
+      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS#installation" target="_blank" rel="noopener">Get Started</a>
     </div>
   </div>
 </header>
@@ -746,124 +764,31 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
     <h2 class="h2">Six steps, and only two touch the device</h2>
     <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract, and it is why the same kernel drops onto an STM32, an nRF52 and an LPC without changing anything but a config file.</p>
 
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <h4>Get the source</h4>
-          <p>As a submodule of your own project - recommended, since updates stay a <code>git pull</code> away.</p>
-          <pre><code>git submodule add https://github.com/AhuraRTOS/ahura_kernel.git AhuraRTOS/kernel
-git submodule update --init --recursive</code></pre>
-          <p>A plain copy of the <code>kernel/</code> directory works too - nothing in the build is git-specific.</p>
-        </div>
+    <div class="readme-note">
+      <div class="rn-icon">📖</div>
+      <div class="rn-body">
+        <b>The README is the installation guide.</b> It ships with the kernel and is kept in step with it, so the procedure is written down in exactly one place rather than copied here to drift out of date. It covers the same six steps twice - once independent of vendor and toolchain, once carried out on real hardware with ST tooling - and ends with a table that names the cause of every common build error.
       </div>
-
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <h4>Copy three files into your project</h4>
-          <p>The kernel deliberately compiles none of these: two are your code, one is your configuration. Their locations do not matter, only that the build can see them.</p>
-          <pre><code>AhuraRTOS/kernel/os_config_template.h  -&gt;  os_config.h  (a header; nothing to compile)
-AhuraRTOS/kernel/os_cb_template.c      -&gt;  os_cb.c      (add to the APPLICATION build)
-AhuraRTOS/kernel/os_main_template.c    -&gt;  os_main.c    (add to the APPLICATION build)</code></pre>
-          <p><code>os_config.h</code> is every build-time option at its default - edit it in place, and do not delete options: a missing one would read as <code>0</code> in an <code>#if</code> and silently disable a feature, so the kernel rejects an incomplete file instead. <code>os_cb.c</code> holds the platform callbacks - the kernel declares them and defines none, so a missing one is a link error rather than a silently empty hook - and <code>os_main.c</code> is where your application code goes.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <h4>Add the kernel to the build</h4>
-          <p><code>OS_CONFIG_DIR</code> must be set <em>before</em> <code>add_subdirectory</code>, so the kernel library and your application compile against the same configuration. If only the application saw <code>os_config.h</code>, their structure sizes would silently disagree.</p>
-          <pre><code>set(OS_CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc)
-add_subdirectory(AhuraRTOS/kernel)
-
-target_sources(my_firmware PRIVATE Core/Src/os_cb.c Core/Src/os_main.c)
-target_link_libraries(my_firmware ahura_kernel)</code></pre>
-          <p>Keep those lines together as <strong>one block appended after your existing target definitions</strong> rather than merged into them: <code>target_sources()</code> and <code>target_link_libraries()</code> both <em>append</em>, so the only ordering requirement is that the target already exists. A generator-owned <code>CMakeLists.txt</code> - CubeMX, MCUXpresso - then stays exactly as generated, and the integration is one block to review or remove. The kernel picks its own port from your <code>-mcpu</code> and says so: <code>-- Ahura kernel arch: cortex_m33</code>.</p>
-          <p><strong>Not using CMake?</strong> Nothing here requires it. The kernel is plain C11 with no generated sources, so Keil, IAR-style projects, MPLAB X, SEGGER Embedded Studio or a hand-written Makefile all work: compile every <code>core/*.c</code> plus <strong>one</strong> <code>arch/arm/&lt;core&gt;/os_arch_port.c</code> matching your device, and add three include paths. Do <strong>not</strong> add <code>arch/arm/common/*.c</code> - those are textual includes pulled in by that wrapper, and compiling them separately produces duplicate symbols.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <h4>Give the kernel its tick</h4>
-          <p>On a stock CMSIS device that is one line, anywhere in your interrupt file. <code>os_tick_handler()</code> is declared in <code>ahura.h</code>, the kernel's single public header.</p>
-          <pre><code>#include "ahura.h"
-
-void SysTick_Handler(void) { os_tick_handler(); }</code></pre>
-          <p>Give that interrupt the <strong>lowest</strong> priority the device offers - it drives preemption, so it must never preempt an application interrupt. The port already does this for SysTick.</p>
-          <p>Where SysTick is unavailable or already taken - Nordic nRF5x, whose SysTick stops in sleep, is the classic case - set <code>OS_CONFIG_TICK_SOURCE_EXTERNAL</code> and drive <code>os_tick_handler()</code> from any timer you like instead.</p>
-          <p>If a vendor HAL also wants SysTick, move one of them rather than sharing the handler. On STM32 that is <strong>CubeMX &rarr; SYS &rarr; Timebase Source &rarr; any spare timer</strong>.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">5</div>
-        <div class="step-body">
-          <h4>Make sure nothing else defines <code>PendSV_Handler</code></h4>
-          <p>Usually nothing does, and there is nothing to do - <code>PendSV_Handler</code> is the CMSIS-Pack name that every vendor startup file already puts in the vector table. The one common exception is a vendor IDE that generates an empty stub: <strong>STM32CubeMX does</strong>, and it is a checkbox.</p>
-          <pre><code>CubeMX -&gt; System Core -&gt; NVIC -&gt; Code generation tab
-       -&gt; clear "Generate IRQ handler" for
-          "Pendable request for system service"</code></pre>
-          <p>That setting lives in the <code>.ioc</code>, so regeneration keeps honouring it. The kernel verifies the live vector table at boot and traps immediately if it was not wired up, instead of hanging silently.</p>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">6</div>
-        <div class="step-body">
-          <h4>Boot it</h4>
-          <p>From <code>main()</code>, after the clock tree is configured.</p>
-          <pre><code>int main(void)
-{
-    SystemClock_Config();   /* whatever your device needs */
-
-    os_init();
-    os_start();             /* never returns */
-}</code></pre>
-          <p><code>os_init()</code> has already created and started a default application task, so there is nothing else to create just to get moving. Write your code in <code>os_main()</code>.</p>
-        </div>
-      </div>
+      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS#installation" target="_blank" rel="noopener">Read the install guide &rarr;</a>
     </div>
 
-    <h3 style="margin-top:44px;">On STM32, in detail</h3>
-    <p class="lede" style="margin-top:10px;">ST tooling differs from every other vendor's in exactly two places, and both are CubeMX checkboxes rather than code. Everything below is verified end to end on a NUCLEO-H503RB generated as a CMake project.</p>
+    <div class="install-grid">
 
-    <div class="flow">
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS#general---any-platform-any-toolchain" target="_blank" rel="noopener">
+        <div class="ic-tag">Any platform, any toolchain</div>
+        <h4>General installation <span class="arw">&rarr;</span></h4>
+        <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists, and the README gives them.</p>
+      </a>
 
-      <div class="flow-item">
-        <div class="flow-key">free PendSV</div>
-        <div class="flow-val">
-          <b>System Core &rarr; NVIC &rarr; Code generation tab &rarr; clear "Generate IRQ handler"</b> for <i>Pendable request for system service</i>. CubeMX otherwise writes a non-weak empty <code>PendSV_Handler</code> into <code>Core/Src/stm32&lt;family&gt;_it.c</code>, which collides with the kernel's at link time. Deleting it by hand works until the next code generation; the checkbox lives in the <code>.ioc</code>, so regeneration keeps honouring it. Leave <i>System tick timer</i> generating - that is where the tick goes - and leave <code>SVC_Handler</code> alone, the kernel never uses it.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">move the HAL time base</div>
-        <div class="flow-val">
-          <b>System Core &rarr; SYS &rarr; Timebase Source &rarr; TIM7</b> (TIM6 and TIM17 are equally good). <code>HAL_Init()</code> otherwise claims SysTick for <code>HAL_GetTick()</code>, and the kernel needs it. CubeMX adds <code>stm32&lt;family&gt;_hal_timebase_tim.c</code>, and from then on <code>HAL_Delay()</code> runs off that timer while SysTick belongs to the kernel - so do <b>not</b> call <code>HAL_IncTick()</code> from <code>SysTick_Handler</code> afterwards. Note that <code>HAL_Delay()</code> still busy-waits: use <code>os_delay_ms()</code> in task code.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">survive regeneration</div>
-        <div class="flow-val">
-          Put the tick call and the <code>os_init()</code> / <code>os_start()</code> pair <b>inside the <code>USER CODE</code> markers</b> of <code>stm32&lt;family&gt;_it.c</code> and <code>main.c</code>, and CubeMX preserves them. Your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are safe unconditionally - CubeMX never touches files it did not generate - and <code>CMakeLists.txt</code> is generated once and never again.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">boot order</div>
-        <div class="flow-val">
-          <code>os_init()</code> goes after the peripherals its callbacks depend on are up - on a Nucleo that means after <code>BSP_COM_Init()</code>, or the first log line goes nowhere - and after the clock tree, since it programs the tick from the live <code>SystemCoreClock</code>.
-        </div>
-      </div>
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS#stm32cubemx--stm32cubeide---step-by-step" target="_blank" rel="noopener">
+        <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
+        <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
+        <p>The same steps on a NUCLEO-H503RB, verified end to end. ST tooling differs from every other vendor's in exactly two places - it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick - and both are CubeMX checkboxes rather than code. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
+      </a>
 
     </div>
 
-    <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in <code>kernel/README.md</code> - the authoritative reference.</p>
+    <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in the <a href="https://github.com/AhuraRTOS/ahura_kernel/blob/main/README.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel README</a> - the authoritative reference.</p>
   </div>
 </section>
 
