@@ -242,7 +242,7 @@
     .flow-key{flex:none;}
   }
 
-  /* GETTING STARTED - the README owns the procedure; these only route to it */
+  /* GETTING STARTED - the docs own the procedure; these only route to it */
   .install-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
   @media (max-width:860px){.install-grid{grid-template-columns:1fr;}}
   .install-card{
@@ -269,7 +269,7 @@
   pre code .kw{color:var(--accent-2);}
   pre code .fn{color:var(--accent);}
 
-  /* README POINTER - the README is the authoritative install guide; this page only summarizes it */
+  /* DOCS POINTER - doc/installation.md is the authoritative install guide; this page only summarizes it */
   .readme-note{
     display:flex; gap:18px; align-items:center; flex-wrap:wrap;
     margin:0 0 40px; padding:20px 22px; border-radius:12px;
@@ -342,7 +342,7 @@
     </nav>
     <div class="nav-cta">
       <a class="btn btn-ghost" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS#installation" target="_blank" rel="noopener">Get Started</a>
+      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Get Started</a>
     </div>
   </div>
 </header>
@@ -361,7 +361,7 @@
     <div class="hero-ctas">
       <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">⭐ View on GitHub</a>
       <a class="btn btn-ghost btn-lg" href="#features">Features</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/ahura_kernel" target="_blank" rel="noopener">Kernel Source</a>
+      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/tree/main/kernel" target="_blank" rel="noopener">Kernel Source</a>
       <a class="btn btn-ghost btn-lg" href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
       <a class="btn btn-ghost btn-lg" href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
     </div>
@@ -449,7 +449,7 @@
   <div class="wrap">
     <div class="eyebrow">The whole API</div>
     <h2 class="h2">Every feature, and the switch that removes it</h2>
-    <p class="lede">Each group below is one <code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> away from being compiled out entirely - code, RAM and API surface, not just skipped at runtime. Everything is declared in a single header, <code>ahura.h</code>. For the exhaustive reference - every parameter, every status code, every constraint - see the <a href="https://github.com/AhuraRTOS/ahura_kernel/blob/main/README.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel README</a>.</p>
+    <p class="lede">Each group below is one <code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> away from being compiled out entirely - code, RAM and API surface, not just skipped at runtime. Everything is declared in a single header, <code>ahura.h</code>. For the exhaustive reference - every parameter, every status code, every constraint - see the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel reference</a>.</p>
 
     <div class="feat-grid">
 
@@ -767,20 +767,20 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
     <div class="readme-note">
       <div class="rn-icon">📖</div>
       <div class="rn-body">
-        <b>The README is the installation guide.</b> It ships with the kernel and is kept in step with it, so the procedure is written down in exactly one place rather than copied here to drift out of date. It covers the same six steps twice - once independent of vendor and toolchain, once carried out on real hardware with ST tooling - and ends with a table that names the cause of every common build error.
+        <b>The docs are the installation guide.</b> They ship with the kernel in the same repository and are kept in step with it, so the procedure is written down in exactly one place rather than copied here to drift out of date. It covers the same six steps twice - once independent of vendor and toolchain, once carried out on real hardware with ST tooling - and ends with a table that names the cause of every common build error.
       </div>
-      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS#installation" target="_blank" rel="noopener">Read the install guide &rarr;</a>
+      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Read the install guide &rarr;</a>
     </div>
 
     <div class="install-grid">
 
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS#general---any-platform-any-toolchain" target="_blank" rel="noopener">
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">
         <div class="ic-tag">Any platform, any toolchain</div>
         <h4>General installation <span class="arw">&rarr;</span></h4>
-        <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists, and the README gives them.</p>
+        <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists, and the installation page gives them.</p>
       </a>
 
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS#stm32cubemx--stm32cubeide---step-by-step" target="_blank" rel="noopener">
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md" target="_blank" rel="noopener">
         <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
         <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
         <p>The same steps on a NUCLEO-H503RB, verified end to end. ST tooling differs from every other vendor's in exactly two places - it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick - and both are CubeMX checkboxes rather than code. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
@@ -788,7 +788,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 
     </div>
 
-    <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in the <a href="https://github.com/AhuraRTOS/ahura_kernel/blob/main/README.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel README</a> - the authoritative reference.</p>
+    <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel reference</a> - the authoritative reference.</p>
   </div>
 </section>
 
@@ -856,12 +856,14 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
     <div class="two-col">
       <div>
         <div class="eyebrow">Repository Layout</div>
-        <h2 class="h2">One umbrella, one kernel</h2>
-        <p class="lede" style="margin-bottom:24px;">This repository is the project umbrella - overview, roadmap, and licensing. The kernel itself lives in <a href="https://github.com/AhuraRTOS/ahura_kernel" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">ahura_kernel</a>, included as a submodule.</p>
+        <h2 class="h2">One repository, no submodules</h2>
+        <p class="lede" style="margin-bottom:24px;">The kernel, the examples and the documentation all live in <a href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">one repository</a>. A plain <code>git clone</code> gives you everything - nothing to initialise, nothing to keep in step.</p>
         <div class="tree-box">
 <pre><code>AhuraRTOS/
-├── kernel/     ← ahura_kernel submodule
-│               (core, arch ports, self-test suite)
+├── doc/        ← installation, vendor notes,
+│               kernel reference, self-test
+├── kernel/     ← core, arch ports, self-test suite
+├── examples/   ← one runnable main per feature
 ├── LICENSE
 └── README.md   ← project overview</code></pre>
         </div>
@@ -909,7 +911,7 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
     <p>The kernel is functional and self-testing across the Cortex-M range. APIs may still change.</p>
     <div class="hero-ctas" style="margin-bottom:0;">
       <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">Explore the Repository</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/ahura_kernel/blob/main/README.md" target="_blank" rel="noopener">Full Kernel Reference</a>
+      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener">Full Kernel Reference</a>
       <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/issues" target="_blank" rel="noopener">Open an Issue</a>
     </div>
   </div>
@@ -921,7 +923,7 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
       <div class="fbrand">⚡ AhuraRTOS</div>
       <div class="footer-links">
         <a href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/AhuraRTOS/ahura_kernel" target="_blank" rel="noopener">Kernel</a>
+        <a href="https://github.com/AhuraRTOS/AhuraRTOS/tree/main/kernel" target="_blank" rel="noopener">Kernel</a>
         <a href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
         <a href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
         <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
