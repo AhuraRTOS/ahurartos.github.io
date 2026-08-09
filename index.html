@@ -98,6 +98,14 @@
   a{color:inherit;}
   .wrap{max-width:1120px; margin:0 auto; padding:0 24px;}
 
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--accent); outline-offset:3px; border-radius:4px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
   /* NAV */
   header.nav{
     position:sticky; top:0; z-index:50;
@@ -146,6 +154,7 @@
   @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
   h1.title{
     font-size:clamp(40px,7vw,76px); font-weight:700; margin:0 0 18px; letter-spacing:-1.5px; line-height:1.05;
+    text-wrap:balance;
   }
   h1.title .grad{
     background:linear-gradient(120deg, var(--accent), var(--accent-2));
@@ -155,8 +164,15 @@
     max-width:660px; margin:0 auto 40px; color:var(--text-dim); font-size:19px;
   }
   .subtitle b{color:var(--text); font-weight:600;}
-  .hero-ctas{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:56px;}
+  .hero-ctas{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:22px;}
   .btn-lg{padding:13px 26px; font-size:15px; border-radius:10px;}
+  .hero-secondary{
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+    font-family:var(--mono); font-size:12.5px; color:var(--text-faint); margin-bottom:56px;
+  }
+  .hero-secondary a{text-decoration:none; padding:2px 0; border-bottom:1px solid transparent; transition:color .15s, border-color .15s;}
+  .hero-secondary a:hover{color:var(--text-dim); border-color:var(--panel-border);}
+  .hero-secondary a:not(:last-child)::after{content:"·"; margin-left:10px; color:var(--panel-border);}
 
   .mcu-strip{
     display:flex; flex-wrap:wrap; justify-content:center; gap:10px; max-width:760px; margin:0 auto;
@@ -182,7 +198,7 @@
     font-family:var(--mono); text-transform:uppercase; letter-spacing:2px; font-size:12px;
     color:var(--accent-2); font-weight:600; margin-bottom:12px;
   }
-  h2.h2{font-size:clamp(28px,4vw,38px); font-weight:700; margin:0 0 14px; letter-spacing:-0.5px;}
+  h2.h2{font-size:clamp(28px,4vw,38px); font-weight:700; margin:0 0 14px; letter-spacing:-0.5px; text-wrap:balance;}
   .lede{color:var(--text-dim); max-width:640px; font-size:16px; margin-bottom:48px;}
 
   /* FEATURE GRID */
@@ -197,7 +213,9 @@
   .card .icon{
     width:38px; height:38px; border-radius:9px; background:var(--accent-soft);
     display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:18px;
+    color:var(--accent);
   }
+  .card .icon svg{width:19px; height:19px;}
   .card h3{font-size:16.5px; margin:0 0 8px; font-weight:600;}
   .card p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.65;}
 
@@ -310,7 +328,7 @@
   .cta-band{
     text-align:center; padding:90px 24px; border-top:1px solid var(--panel-border);
   }
-  .cta-band h2{font-size:clamp(26px,4vw,36px); margin:0 0 16px;}
+  .cta-band h2{font-size:clamp(26px,4vw,36px); margin:0 0 16px; text-wrap:balance;}
   .cta-band p{color:var(--text-dim); margin:0 0 32px;}
 
   footer{border-top:1px solid var(--panel-border); padding:36px 0 48px;}
@@ -360,10 +378,13 @@
     </p>
     <div class="hero-ctas">
       <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">⭐ View on GitHub</a>
-      <a class="btn btn-ghost btn-lg" href="#features">Features</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/tree/main/kernel" target="_blank" rel="noopener">Kernel Source</a>
-      <a class="btn btn-ghost btn-lg" href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
-      <a class="btn btn-ghost btn-lg" href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
+      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Get Started</a>
+    </div>
+    <div class="hero-secondary">
+      <a href="#features">Features</a>
+      <a href="https://github.com/AhuraRTOS/AhuraRTOS/tree/main/kernel" target="_blank" rel="noopener">Kernel Source</a>
+      <a href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
+      <a href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
     </div>
     <p class="mcu-caption">Ports available today - ARM Cortex-M</p>
     <div class="mcu-strip">
@@ -395,49 +416,49 @@
     <p class="lede">A functional, self-testing kernel whose core knows nothing about the CPU it runs on. Every Cortex-M from M0 to M85 works today; further architectures plug into the same port interface.</p>
     <div class="grid">
       <div class="card">
-        <div class="icon">⏱</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>
         <h3>Preemptive, priority-based scheduler</h3>
         <p>O(1) list-based scheduling with one FIFO ready list per priority, a ready bitmap for O(1) next-task lookup, and round-robin among equal priorities over a configurable time slice. A scheduler lock defers preemption without masking a single interrupt.</p>
       </div>
       <div class="card">
-        <div class="icon">🧩</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg></div>
         <h3>Multi-platform by design</h3>
         <p>The core is portable C. A port supplies only what the CPU decides - context switch, tick, critical section, atomics, low-power hooks - so a new architecture is a new port, not a kernel change. ARM Cortex-M ships today: ARMv6-M through ARMv8.1-M, M0 to M85, in three shared port files. RISC-V and Xtensa/ESP32 are next (see Roadmap).</p>
       </div>
       <div class="card">
-        <div class="icon">🔗</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3-3M17 17l-3 3"/></svg></div>
         <h3>IPC, sync &amp; task notifications</h3>
         <p>Mutexes with priority inheritance, semaphores, queues, events, and lightweight per-task notifications - all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
       </div>
       <div class="card">
-        <div class="icon">🛎</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="12" y2="17"/></svg></div>
         <h3>Software timers &amp; work queues</h3>
         <p>A deferrable, Zephyr-style work queue running on dedicated kernel service tasks.</p>
       </div>
       <div class="card">
-        <div class="icon">🧠</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="10" width="10" height="4" rx="1"/><rect x="4" y="16" width="13" height="4" rx="1"/></svg></div>
         <h3>Kernel heap</h3>
         <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>, compiled out entirely when unused.</p>
       </div>
       <div class="card">
-        <div class="icon">🔒</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/></svg></div>
         <h3>TrustZone support (ARMv8-M)</h3>
         <span class="untested">not tested on hardware</span>
         <p>Secure, non-secure, and disabled modes, with application callbacks for secure-context banking. Compiles and links, but has not been run on a TrustZone-enabled part.</p>
       </div>
       <div class="card">
-        <div class="icon">🧵</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg></div>
         <h3>Multi-core scheduling</h3>
         <span class="untested">not tested on hardware</span>
         <p>Per-task core affinity across shared ready lists. Builds in the CI matrix, but has never run on real multi-core silicon.</p>
       </div>
       <div class="card">
-        <div class="icon">✅</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg></div>
         <h3>Built-in self-test suite</h3>
         <p>A standalone module that exercises every enabled feature and reports PASS/FAIL over <code>printf</code> - validate a board with zero application code.</p>
       </div>
       <div class="card">
-        <div class="icon">📄</div>
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><line x1="9.5" y1="12" x2="14.5" y2="12"/><line x1="9.5" y1="15" x2="14.5" y2="15"/></svg></div>
         <h3>Single public header</h3>
         <p><code>ahura.h</code> plus one application-owned <code>os_config.h</code>, copied from a template. The kernel ships no configuration of its own.</p>
       </div>
