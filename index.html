@@ -299,6 +299,25 @@
   .readme-note .rn-body code{font-size:13px;}
   .readme-note .btn{flex:0 0 auto;}
 
+  /* ONE-COMMAND INSTALL - tools/install_stm32.py, for CubeMX CMake projects */
+  .oneliner{
+    margin:0 0 40px; padding:26px 28px; border-radius:12px;
+    background:linear-gradient(180deg, rgba(240,168,40,0.07), rgba(240,168,40,0.015));
+    border:1px solid rgba(240,168,40,0.30);
+  }
+  .oneliner h3{margin:0 0 8px; font-size:20px; font-weight:600; color:var(--text);}
+  .oneliner .ol-sub{margin:0 0 22px; color:var(--text-dim); font-size:14.5px; line-height:1.7;}
+  .oneliner .ol-os{
+    display:block; margin:0 0 9px; font-size:11.5px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--accent); font-weight:600;
+  }
+  .oneliner .ol-cmd + .ol-cmd{margin-top:20px;}
+  .oneliner pre{background:#080b10;}
+  .oneliner pre code{font-size:12.5px;}
+  .oneliner .ol-foot{margin:22px 0 0; color:var(--text-dim); font-size:14px; line-height:1.75;}
+  .oneliner .ol-foot code{font-size:12.5px;}
+  .oneliner .ol-foot b{color:var(--text); font-weight:600;}
+
   /* ARCHITECTURE / TREE */
   .two-col{display:grid; grid-template-columns:1.1fr 1fr; gap:40px; align-items:start;}
   @media (max-width:860px){.two-col{grid-template-columns:1fr;}}
@@ -782,8 +801,29 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 <section class="section" id="getting-started">
   <div class="wrap">
     <div class="eyebrow">Installation</div>
-    <h2 class="h2">Six steps, and only two touch the device</h2>
+    <h2 class="h2">Six steps by hand - or one command on STM32CubeMX</h2>
     <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract, and it is why the same kernel drops onto an STM32, an nRF52 and an LPC without changing anything but a config file.</p>
+
+    <div class="oneliner">
+      <h3>One command, on a CubeMX CMake project</h3>
+      <p class="ol-sub">Run it from the root of your project - the directory holding <code>CMakeLists.txt</code> and the <code>.ioc</code>. It fetches the kernel, copies the three application-owned files, adds the CMake block, routes the tick and wires up <code>os_init()</code> / <code>os_start()</code>. It prints the exact diff first and asks before writing anything.</p>
+
+      <div class="ol-cmd">
+        <span class="ol-os">Windows &middot; PowerShell</span>
+<pre><code>irm https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32.py | python -</code></pre>
+      </div>
+
+      <div class="ol-cmd">
+        <span class="ol-os">Linux &amp; macOS &middot; bash, zsh</span>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32.py | python3 -</code></pre>
+      </div>
+
+      <p class="ol-foot">
+        Python 3.8+ and nothing else - no <code>pip install</code>, and nothing saved into your project but the integration itself. <b>It never opens the <code>.ioc</code></b>: that file is what CubeMX generates <em>from</em>, and everything the script needs is in the generated sources. Every C edit goes inside a CubeMX <code>USER CODE</code> section, so regeneration keeps it, and your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist.
+        <br><br>
+        <b>Running it twice is free.</b> It checks what is already in place and fills in only what is missing - which also makes it the repair when CubeMX regenerates over the integration. <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out.
+      </p>
+    </div>
 
     <div class="readme-note">
       <div class="rn-icon">📖</div>
@@ -804,7 +844,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md" target="_blank" rel="noopener">
         <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
         <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
-        <p>The same steps on a NUCLEO-H503RB, verified end to end. ST tooling differs from every other vendor's in exactly two places - it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick - and both are CubeMX checkboxes rather than code. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
+        <p>The same steps on a NUCLEO-H503RB, verified end to end - and what the one command above does for you. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
       </a>
 
     </div>
@@ -883,8 +923,10 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
 <pre><code>AhuraRTOS/
 ├── doc/        ← installation, vendor notes,
 │               kernel reference, self-test
-├── kernel/     ← core, arch ports, self-test suite
+├── kernel/     ← core, arch ports, templates,
+│               self-test suite
 ├── examples/   ← one runnable main per feature
+├── tools/      ← one-command CubeMX installer
 ├── LICENSE
 └── README.md   ← project overview</code></pre>
         </div>
