@@ -822,6 +822,8 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
         Python 3.8+ and nothing else - no <code>pip install</code>, and nothing saved into your project but the integration itself. <b>It never opens the <code>.ioc</code></b>: that file is what CubeMX generates <em>from</em>, and everything the script needs is in the generated sources. Every C edit goes inside a CubeMX <code>USER CODE</code> section, so regeneration keeps it, and your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist.
         <br><br>
         <b>Running it twice is free.</b> It checks what is already in place and fills in only what is missing - which also makes it the repair when CubeMX regenerates over the integration. <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out.
+        <br><br>
+        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">STM32CubeMX &rarr; Automatic</a>.
       </p>
     </div>
 
@@ -837,7 +839,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 
       <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">
         <div class="ic-tag">Any platform, any toolchain</div>
-        <h4>General installation <span class="arw">&rarr;</span></h4>
+        <h4>Manual installation <span class="arw">&rarr;</span></h4>
         <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists, and the installation page gives them.</p>
       </a>
 
