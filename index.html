@@ -621,7 +621,7 @@ os_notify_wait(OS_WAIT_FOREVER, NULL);</code></pre>
         <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
         <p>One-shot or periodic, with callbacks running on a dedicated kernel task rather than in the tick interrupt. Periods reload in the tick, so a periodic timer does not drift with callback latency.</p>
         <pre><code><span class="cm">/* the macro names the kind - no mode to pass, none to get wrong */</span>
-OS_TIMER_PERIODIC_DEFINE(t, 250U, on_expiry);
+OS_TIMER_DEFINE_PERIODIC(t, 250U, on_expiry);
 
 os_timer_start(&amp;t, &amp;dev, 3U);    <span class="cm">/* ctx + value for this run */</span>
 os_timer_restart(&amp;t, &amp;dev, 3U);  <span class="cm">/* always a full period     */</span>
@@ -640,7 +640,7 @@ os_timer_value_set(&amp;t, 7U);</code></pre>
         <p>Two things get called &quot;later&quot;, so there are two calls. <code>os_timer_start</code> reschedules - one callback, latest event, which is a debounce. <code>os_timer_submit</code> queues - an ISR firing three times runs the callback three times, each with its own value. The pool is yours, declared where the work is, so FULL is always local and there is no kernel-wide number.</p>
         <pre><code>static void handler(void *context, uint32_t value);
 
-OS_TIMER_SUBMIT_DEFINE(events, 8U, 0U, handler);
+OS_TIMER_DEFINE_SUBMIT(events, 8U, 0U, handler);
 
 os_timer_submit(&amp;events, &amp;device, code1);  <span class="cm">/* in the ISR   */</span>
 os_timer_submit(&amp;events, &amp;device, code2);  <span class="cm">/* fires again  */</span>
