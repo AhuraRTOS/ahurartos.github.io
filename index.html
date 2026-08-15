@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AhuraRTOS - Open-source RTOS for ARM Cortex-M | The Prince of RTOS</title>
-<meta name="description" content="AhuraRTOS is a small, open-source preemptive real-time operating system for embedded systems. Priority scheduling, mutexes, queues, timers and a work queue on ARM Cortex-M M0 to M85 - GPLv3 licensed.">
+<meta name="description" content="AhuraRTOS is a small, open-source preemptive real-time operating system for embedded systems. Priority scheduling, mutexes, queues, timers and deferred calls on ARM Cortex-M M0 to M85 - GPLv3 licensed.">
 <link rel="canonical" href="https://ahurartos.github.io/">
 <meta name="theme-color" content="#0a0d12">
 <meta name="author" content="AhuraRTOS">
@@ -14,7 +14,7 @@
 <meta property="og:site_name" content="AhuraRTOS">
 <meta property="og:url" content="https://ahurartos.github.io/">
 <meta property="og:title" content="AhuraRTOS - Open-source RTOS for ARM Cortex-M">
-<meta property="og:description" content="A small, preemptive real-time operating system for embedded systems. Priority scheduling, mutexes, queues, timers and a work queue on ARM Cortex-M M0 to M85 - GPLv3 licensed.">
+<meta property="og:description" content="A small, preemptive real-time operating system for embedded systems. Priority scheduling, mutexes, queues, timers and deferred calls on ARM Cortex-M M0 to M85 - GPLv3 licensed.">
 <meta property="og:image" content="https://ahurartos.github.io/logo.jpg">
 <meta property="og:image:width" content="1254">
 <meta property="og:image:height" content="1254">
@@ -43,7 +43,7 @@
   "applicationCategory": "DeveloperApplication",
   "applicationSubCategory": "Real-time operating system",
   "operatingSystem": "Bare metal (ARM Cortex-M)",
-  "description": "A small, open-source preemptive real-time operating system for embedded systems. Priority-based scheduling, mutexes with priority inheritance, semaphores, queues, events, software timers and a deferrable work queue, on ARM Cortex-M M0 through M85.",
+  "description": "A small, open-source preemptive real-time operating system for embedded systems. Priority-based scheduling, mutexes with priority inheritance, semaphores, queues, events, software timers and deferred calls, on ARM Cortex-M M0 through M85.",
   "url": "https://ahurartos.github.io/",
   "image": "https://ahurartos.github.io/logo.jpg",
   "codeRepository": "https://github.com/AhuraRTOS/AhuraRTOS",
@@ -451,8 +451,8 @@
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="12" y2="17"/></svg></div>
-        <h3>Software timers &amp; work queues</h3>
-        <p>A deferrable, Zephyr-style work queue running on dedicated kernel service tasks.</p>
+        <h3>Software timers &amp; deferred calls</h3>
+        <p>One-shot and periodic timers, and deferred work off an interrupt - the same one-shot, started with the data its callback needs. One kernel service task, no pool to size.</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="10" width="10" height="4" rx="1"/><rect x="4" y="16" width="13" height="4" rx="1"/></svg></div>
@@ -526,7 +526,6 @@ os_kernel_unlock(); <span class="cm">/* deferred switch happens here */</span></
         <p>Blocking delays yield the CPU once the scheduler runs and fall back to a precise busy-wait before it does. Microsecond waits are cycle-counted. None of them return a status - a delay either waits, or the request was one the platform cannot express and an assertion says so.</p>
         <pre><code>os_delay_ms(500U);
 os_delay_us(200U);          <span class="cm">/* busy-wait, cycle-accurate */</span>
-os_delay_s(1U);
 os_delay_ms(OS_WAIT_FOREVER); <span class="cm">/* park this task */</span>
 
 uint32_t now = os_tick_get();</code></pre>
@@ -621,28 +620,31 @@ os_notify_wait(OS_WAIT_FOREVER, NULL);</code></pre>
         <h3>Software timers</h3>
         <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
         <p>One-shot or periodic, with callbacks running on a dedicated kernel task rather than in the tick interrupt. Periods reload in the tick, so a periodic timer does not drift with callback latency.</p>
-        <pre><code>static os_timer_t t;
+        <pre><code><span class="cm">/* the macro names the kind - no mode to pass, none to get wrong */</span>
+OS_TIMER_PERIODIC_DEFINE(t, 250U, on_expiry);
 
-os_timer_init(&amp;t, OS_TICKS_FROM_MS(250U),
-              OS_TIMER_MODE_PERIODIC, on_expiry, NULL);
-
-os_timer_start(&amp;t);     <span class="cm">/* or resume a pause */</span>
-os_timer_restart(&amp;t);   <span class="cm">/* always a full period */</span>
-os_timer_pause(&amp;t);     <span class="cm">/* keeps the time left */</span>
+os_timer_start(&amp;t, &amp;dev, 3U);    <span class="cm">/* ctx + value for this run */</span>
+os_timer_restart(&amp;t, &amp;dev, 3U);  <span class="cm">/* always a full period     */</span>
+os_timer_pause(&amp;t);              <span class="cm">/* keeps the time left      */</span>
 os_timer_stop(&amp;t);
-os_timer_delete(&amp;t);</code></pre>
+
+<span class="cm">/* and each of these is changeable at run time */</span>
+os_timer_period_set(&amp;t, 100U);
+os_timer_callback_set(&amp;t, other_cb);
+os_timer_value_set(&amp;t, 7U);</code></pre>
       </div>
 
       <div class="feat">
-        <h3>Deferrable work queue</h3>
-        <span class="cfg">OS_CONFIG_WORK_ENABLE</span>
-        <p>Hand a function to the kernel to run later, from an ISR if you like. There is no work object to declare or keep alive: the handler <em>and</em> its payload are copied into a kernel slot, so a local buffer may go out of scope the moment the call returns.</p>
-        <pre><code>static void handler(void *data, size_t len);
+        <h3>Deferred calls</h3>
+        <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
+        <p>Two things get called &quot;later&quot;, so there are two calls. <code>os_timer_start</code> reschedules - one callback, latest event, which is a debounce. <code>os_timer_submit</code> queues - an ISR firing three times runs the callback three times, each with its own value. The pool is yours, declared where the work is, so FULL is always local and there is no kernel-wide number.</p>
+        <pre><code>static void handler(void *context, uint32_t value);
 
-my_payload_t payload = { ... };   <span class="cm">/* an ordinary local */</span>
+OS_TIMER_SUBMIT_DEFINE(events, 8U, 0U, handler);
 
-os_work_submit(handler, &amp;payload, sizeof(payload), 100U);
-os_work_submit(handler, NULL, 0U, 0U);   <span class="cm">/* no payload */</span></code></pre>
+os_timer_submit(&amp;events, &amp;device, code1);  <span class="cm">/* in the ISR   */</span>
+os_timer_submit(&amp;events, &amp;device, code2);  <span class="cm">/* fires again  */</span>
+<span class="cm">/* runs twice: code1, then code2 - neither lost */</span></code></pre>
       </div>
 
       <div class="feat">
@@ -755,7 +757,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <div class="flow-item">
         <div class="flow-key">measuring time</div>
         <div class="flow-val">
-          <code>SysTick</code> drives one counter. Each tick advances delayed tasks, software timers and the work queue, then pends PendSV <b>only if that tick actually made someone runnable</b> - a quiescent tick costs a bitmap check instead of a full switch. Only finite sleepers sit in the delay list, so the cost is proportional to tasks that are sleeping, not to tasks that exist.
+          <code>SysTick</code> drives one counter. Each tick advances delayed tasks and software timers, then pends PendSV <b>only if that tick actually made someone runnable</b> - a quiescent tick costs a bitmap check instead of a full switch. Only finite sleepers sit in the delay list, so the cost is proportional to tasks that are sleeping, not to tasks that exist.
         </div>
       </div>
 
