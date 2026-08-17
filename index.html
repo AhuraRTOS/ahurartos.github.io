@@ -538,8 +538,8 @@ uint32_t now = os_tick_get();</code></pre>
         <pre><code>static os_mutex_t lock;
 
 os_mutex_init(&amp;lock);
-os_mutex_lock(&amp;lock, 100U);   <span class="cm">/* ms, or OS_WAIT_FOREVER */</span>
-os_mutex_try_lock(&amp;lock);     <span class="cm">/* never blocks */</span>
+os_mutex_lock(&amp;lock, 100U);              <span class="cm">/* ms, or OS_WAIT_FOREVER */</span>
+os_mutex_lock(&amp;lock, OS_WAIT_NOTHING);   <span class="cm">/* never blocks */</span>
 os_mutex_unlock(&amp;lock);</code></pre>
       </div>
 
