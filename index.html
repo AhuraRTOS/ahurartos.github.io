@@ -721,8 +721,12 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
         <span class="cfg">OS_CONFIG_CORE_COUNT · OS_CONFIG_TICKLESS_ENABLE</span>
         <span class="untested">not tested on hardware</span>
         <p>SMP scheduling gives each task a core-affinity mask over shared ready lists; it compiles and is exercised in CI, but has never run on real multi-core silicon. Tickless idle suppresses the tick across a known-idle window - implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
-        <pre><code>OS_TASK_CONFIG(entry, NULL, prio,
-               OS_TASK_CORE(0) | OS_TASK_CORE(2));
+        <pre><code><span class="cm">/* Cores are numbered from 0: a dual-core part is core 0 and core 1 */</span>
+OS_TASK_CONFIG(entry, NULL, prio, OS_TASK_CORE(0));
+
+<span class="cm">/* Or a set of allowed cores */</span>
+OS_TASK_CONFIG(entry, NULL, prio,
+               OS_TASK_CORE(0) | OS_TASK_CORE(1));
 
 void os_tickless_pre_sleep_cb(void);   <span class="cm">/* gate clocks */</span>
 void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span></code></pre>
