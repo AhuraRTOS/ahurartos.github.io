@@ -239,7 +239,13 @@
     color:#ffb09b; background:rgba(255,120,90,0.10); border:1px solid rgba(255,120,90,0.34);
     padding:3px 8px; border-radius:6px; display:inline-block; margin:0 0 12px;
   }
+  .tested{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.2px;
+    color:#8fe3b4; background:rgba(80,200,140,0.10); border:1px solid rgba(80,200,140,0.34);
+    padding:3px 8px; border-radius:6px; display:inline-block; margin:0 0 12px;
+  }
   .card .untested{margin:0 0 10px;}
+  .card .tested{margin:0 0 10px;}
   .feat p{margin:0 0 14px; color:var(--text-dim); font-size:14px; line-height:1.65;}
   .feat pre{margin-top:auto; font-size:12.5px; padding:14px 16px;}
   .feat pre code{font-size:12.5px;}
@@ -468,8 +474,8 @@
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg></div>
         <h3>Multi-core scheduling</h3>
-        <span class="untested">not tested on hardware</span>
-        <p>Per-task core affinity across shared ready lists. Builds in the CI matrix, but has never run on real multi-core silicon.</p>
+        <span class="tested">verified on RP2350</span>
+        <p>Per-task core affinity across shared ready lists, verified end-to-end on the RP2350's dual Cortex-M33 - the self-test runs a dedicated cross-core stress section. The RP2040's ARMv6-M path builds in CI but has not run on silicon.</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg></div>
@@ -719,8 +725,8 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
       <div class="feat">
         <h3>Multi-core and tickless</h3>
         <span class="cfg">OS_CONFIG_CORE_COUNT · OS_CONFIG_TICKLESS_ENABLE</span>
-        <span class="untested">not tested on hardware</span>
-        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists; it compiles and is exercised in CI, but has never run on real multi-core silicon. Tickless idle suppresses the tick across a known-idle window - implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
+        <span class="tested">SMP verified on RP2350 · tickless untested</span>
+        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists, verified end-to-end on the RP2350's dual Cortex-M33 with a dedicated cross-core stress section in the self-test; the RP2040's ARMv6-M path builds in CI but has not run on silicon. Tickless idle suppresses the tick across a known-idle window - implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
         <pre><code><span class="cm">/* Cores are numbered from 0: a dual-core part is core 0 and core 1 */</span>
 OS_TASK_CONFIG(entry, NULL, prio, OS_TASK_CORE(0));
 
@@ -979,7 +985,7 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
         <p>Configuration and build tooling, optional modules (filesystem, additional IPC), community-driven extensions.</p>
       </div>
     </div>
-    <div class="gaps"><b>Not yet proven on hardware:</b> TrustZone, multi-core (SMP) scheduling, and tickless idle. All three build and are exercised in CI, but none has been run on a part that actually has the feature - treat them as unfinished rather than as capabilities you can rely on today. Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
+    <div class="gaps"><b>Not yet proven on hardware:</b> TrustZone and tickless idle. Both build and are exercised in CI, but neither has been run on a part that actually has the feature - treat them as unfinished rather than as capabilities you can rely on today. Multi-core scheduling is verified on the RP2350 (see above). Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
   </div>
 </section>
 
