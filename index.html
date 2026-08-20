@@ -293,7 +293,7 @@
   pre code .kw{color:var(--accent-2);}
   pre code .fn{color:var(--accent);}
 
-  /* DOCS POINTER - doc/installation.md is the authoritative install guide; this page only summarizes it */
+  /* DOCS POINTER - doc/installation.md is the authoritative install guide, with doc/stm32cubemx.md and doc/pico-sdk.md per platform; this page only summarizes them */
   .readme-note{
     display:flex; gap:18px; align-items:center; flex-wrap:wrap;
     margin:0 0 40px; padding:20px 22px; border-radius:12px;
@@ -868,14 +868,14 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <p class="ol-foot">
         Same rules as the STM32 installer: Python 3.8+ and nothing else, your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist, <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out, and the offline twin runs the same steps from a local copy of the repository.
         <br><br>
-        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/soc.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">SoC packages &rarr; Raspberry Pi</a>.
+        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Raspberry Pi Pico SDK &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
       </p>
     </div>
 
     <div class="readme-note">
       <div class="rn-icon">📖</div>
       <div class="rn-body">
-        <b>The docs are the installation guide.</b> They ship with the kernel in the same repository and are kept in step with it, so the procedure is written down in exactly one place rather than copied here to drift out of date. It covers the same six steps twice - once independent of vendor and toolchain, once carried out on real hardware with ST tooling - and ends with a table that names the cause of every common build error.
+        <b>The docs are the installation guide.</b> They ship with the kernel in the same repository and are kept in step with it, so the procedure is written down in exactly one place rather than copied here to drift out of date. It covers the same six steps three times - once independent of vendor and toolchain, then carried out on real hardware with ST tooling and on the Raspberry Pi Pico SDK - and each page ends with a table that names the cause of every common build error.
       </div>
       <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Read the install guide &rarr;</a>
     </div>
@@ -894,10 +894,10 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
         <p>The same steps on a NUCLEO-H503RB, verified end to end - and what the one command above does for you. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
       </a>
 
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/soc.md" target="_blank" rel="noopener">
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md" target="_blank" rel="noopener">
         <div class="ic-tag">Raspberry Pi Pico SDK</div>
-        <h4>One command for RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
-        <p>Same one-command install, tuned for the Pico SDK: the board name picks the SoC package, and the package itself supplies the PendSV vector and the tick - nothing to route by hand. Verified end to end on the RP2350, including dual-core SMP scheduling with the self-test's cross-core stress section.</p>
+        <h4>Step by step on RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
+        <p>The Pico page, three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, and the package supplies the PendSV vector and the tick - nothing to route yourself. Verified end to end on the RP2350, including dual-core SMP with the self-test's cross-core stress section.</p>
       </a>
 
     </div>
@@ -979,7 +979,9 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
 ├── kernel/     ← core, arch ports, templates,
 │               self-test suite
 ├── examples/   ← one runnable main per feature
-├── tools/      ← one-command CubeMX installer
+├── tools/      ← one-command installers: CubeMX
+│               and Pico SDK, each with an
+│               offline twin
 ├── LICENSE
 └── README.md   ← project overview</code></pre>
         </div>
