@@ -305,7 +305,7 @@
   .readme-note .rn-body code{font-size:13px;}
   .readme-note .btn{flex:0 0 auto;}
 
-  /* ONE-COMMAND INSTALL - tools/install_stm32.py (and _offline), for CubeMX CMake projects */
+  /* ONE-COMMAND INSTALL - tools/install_stm32_online.py and tools/install_rpi_online.py (each with an _offline twin), for CubeMX CMake and Pico SDK projects */
   .oneliner{
     margin:0 0 40px; padding:26px 28px; border-radius:12px;
     background:linear-gradient(180deg, rgba(240,168,40,0.07), rgba(240,168,40,0.015));
@@ -813,7 +813,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 <section class="section" id="getting-started">
   <div class="wrap">
     <div class="eyebrow">Installation</div>
-    <h2 class="h2">Six steps by hand - or one command on STM32CubeMX</h2>
+    <h2 class="h2">Six steps by hand - or one command on STM32CubeMX or the Pico SDK</h2>
     <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract, and it is why the same kernel drops onto an STM32, an nRF52 and an LPC without changing anything but a config file.</p>
 
     <div class="oneliner">
@@ -822,12 +822,12 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 
       <div class="ol-cmd">
         <span class="ol-os">Windows &middot; PowerShell</span>
-<pre><code>irm https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32.py | python -</code></pre>
+<pre><code>irm https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32_online.py | python -</code></pre>
       </div>
 
       <div class="ol-cmd">
         <span class="ol-os">Linux &amp; macOS &middot; bash, zsh</span>
-<pre><code>curl -fsSL https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32.py | python3 -</code></pre>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32_online.py | python3 -</code></pre>
       </div>
 
       <div class="ol-cmd">
@@ -843,6 +843,32 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
         <b>Air-gapped, or behind a locked-down network?</b> Clone the repository - or use GitHub's <em>Download ZIP</em> - on a machine that has a connection, copy it into your project, and run the offline installer from the project root. It carries out the same six steps from that local copy and produces the same result; the only difference is where the kernel comes from. It imports no networking module at all, so being offline is a property of the file rather than a promise in a comment.
         <br><br>
         Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">STM32CubeMX &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
+      </p>
+    </div>
+
+    <div class="oneliner">
+      <h3>One command, on a Raspberry Pi Pico SDK project</h3>
+      <p class="ol-sub">Run it from the root of your project - the directory holding the top-level <code>CMakeLists.txt</code> and <code>pico_sdk_import.cmake</code>. It detects the board, selects the matching SoC package (<code>raspberrypi/rp2040</code> or <code>raspberrypi/rp235x_arm</code>), copies the three application-owned files plus the package's <code>soc_config.h</code>, adds the CMake block and wires up <code>os_init()</code> / <code>os_start()</code> in <code>main()</code>. There is no PendSV or SysTick step - the package supplies both vectors. It prints the exact diff first and asks before writing anything.</p>
+
+      <div class="ol-cmd">
+        <span class="ol-os">Windows &middot; PowerShell</span>
+<pre><code>irm https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_rpi_online.py | python -</code></pre>
+      </div>
+
+      <div class="ol-cmd">
+        <span class="ol-os">Linux &amp; macOS &middot; bash, zsh</span>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_rpi_online.py | python3 -</code></pre>
+      </div>
+
+      <div class="ol-cmd">
+        <span class="ol-os">No internet on the machine</span>
+<pre><code>python3 AhuraRTOS/tools/install_rpi_offline.py</code></pre>
+      </div>
+
+      <p class="ol-foot">
+        Same rules as the STM32 installer: Python 3.8+ and nothing else, your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist, <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out, and the offline twin runs the same steps from a local copy of the repository.
+        <br><br>
+        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/soc.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">SoC packages &rarr; Raspberry Pi</a>.
       </p>
     </div>
 
@@ -866,6 +892,12 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
         <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
         <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
         <p>The same steps on a NUCLEO-H503RB, verified end to end - and what the one command above does for you. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
+      </a>
+
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/soc.md" target="_blank" rel="noopener">
+        <div class="ic-tag">Raspberry Pi Pico SDK</div>
+        <h4>One command for RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
+        <p>Same one-command install, tuned for the Pico SDK: the board name picks the SoC package, and the package itself supplies the PendSV vector and the tick - nothing to route by hand. Verified end to end on the RP2350, including dual-core SMP scheduling with the self-test's cross-core stress section.</p>
       </a>
 
     </div>
