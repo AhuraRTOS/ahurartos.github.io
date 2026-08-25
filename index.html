@@ -474,7 +474,6 @@
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg></div>
         <h3>Multi-core scheduling</h3>
-        <span class="tested">verified on RP2350 and RP2040</span>
         <p>Per-task core affinity across shared ready lists, verified end-to-end on three dual-core targets - the RP2350's Cortex-M33 pair, the same chip's Hazard3 RISC-V pair, and the RP2040's Cortex-M0+ pair - each running the self-test's dedicated cross-core stress section.</p>
       </div>
       <div class="card">
@@ -495,141 +494,90 @@
   <div class="wrap">
     <div class="eyebrow">The whole API</div>
     <h2 class="h2">Every feature, and the switch that removes it</h2>
-    <p class="lede">Each group below is one <code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> away from being compiled out entirely - code, RAM and API surface, not just skipped at runtime. Everything is declared in a single header, <code>ahura.h</code>. For the exhaustive reference - every parameter, every status code, every constraint - see the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel reference</a>.</p>
+    <p class="lede">Each group below is one <code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> away from being compiled out entirely - code, RAM and API surface, not just skipped at run time. Everything is declared in a single header, <code>ahura.h</code>. Every parameter, status code and constraint is in the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel reference</a>.</p>
 
     <div class="feat-grid">
 
       <div class="feat">
         <h3>Tasks and the scheduler</h3>
         <span class="cfg always">always compiled in</span>
-        <p>Preemptive and priority-based, with 31 levels, one FIFO ready list per priority and round-robin between equals over a time slice you set (<code>OS_CONFIG_TIME_SLICE_TICKS</code>, or 0 to turn rotation off). A task's stack and name belong to its handle, so creating one only says what it <em>does</em>. The kernel's own service tasks refuse pause and delete.</p>
-        <pre><code><span class="cm">/* file scope: handle + stack, initialized at compile time */</span>
+        <p>Preemptive and priority-based: 31 levels, one FIFO ready list per priority, round-robin between equals over a slice you set. A task's stack and name belong to its handle, so creating one only says what it <em>does</em>.</p>
+        <pre><code><span class="cm">/* handle + stack, initialized at compile time */</span>
 OS_TASK_DEFINE(worker, 512U);
 
 os_task_create(&amp;worker,
     OS_TASK_CONFIG(worker_entry, NULL, OS_TASK_PRIO_2));
-os_task_start(&amp;worker);
-os_task_priority_set(&amp;worker, OS_TASK_PRIO_5);
-os_task_pause(&amp;worker);
-os_task_delete(&amp;worker);</code></pre>
+os_task_start(&amp;worker);</code></pre>
       </div>
 
       <div class="feat">
         <h3>Critical sections &amp; scheduler lock</h3>
         <span class="cfg always">always compiled in</span>
-        <p>Two preemption barriers, and they are not interchangeable. A critical section masks interrupts, so it stops everything - the tick, the drivers, every latency budget that depends on them. A scheduler lock stops only the scheduler: interrupts keep running and keep waking tasks, they just do not get the CPU until the outermost unlock, which then takes the switch it deferred. Guard task-to-task data with the lock; anything an ISR also touches still needs the critical section.</p>
+        <p>Two preemption barriers, not interchangeable. A critical section masks interrupts, so it stops the tick and every driver with it. A scheduler lock stops only the scheduler - interrupts keep running and keep waking tasks. Guard task-to-task data with the lock; anything an ISR also touches needs the critical section.</p>
         <pre><code>os_critical_enter();   <span class="cm">/* task &lt;-&gt; ISR, and across cores */</span>
 os_critical_exit();
 
-os_kernel_lock();   <span class="cm">/* task &lt;-&gt; task, interrupts stay live */</span>
-rebuild_shared_state();
-os_kernel_unlock(); <span class="cm">/* deferred switch happens here */</span></code></pre>
+os_kernel_lock();      <span class="cm">/* task &lt;-&gt; task, interrupts live */</span>
+os_kernel_unlock();    <span class="cm">/* deferred switch happens here */</span></code></pre>
       </div>
 
       <div class="feat">
         <h3>Delays and time</h3>
         <span class="cfg always">always compiled in</span>
-        <p>Blocking delays yield the CPU once the scheduler runs and fall back to a precise busy-wait before it does. Microsecond waits are cycle-counted. None of them return a status - a delay either waits, or the request was one the platform cannot express and an assertion says so.</p>
+        <p>Blocking delays yield the CPU once the scheduler runs, and fall back to a precise busy-wait before it does. Microsecond waits are cycle-counted.</p>
         <pre><code>os_delay_ms(500U);
-os_delay_us(200U);          <span class="cm">/* busy-wait, cycle-accurate */</span>
-os_delay_ms(OS_WAIT_FOREVER); <span class="cm">/* park this task */</span>
-
-uint32_t now = os_tick_get();</code></pre>
+os_delay_us(200U);            <span class="cm">/* busy-wait, cycle-accurate */</span>
+os_delay_ms(OS_WAIT_FOREVER); <span class="cm">/* park this task */</span></code></pre>
       </div>
 
       <div class="feat">
         <h3>Mutexes with priority inheritance</h3>
         <span class="cfg">OS_CONFIG_MUTEX_ENABLE</span>
         <p>Inheritance is always on, the way FreeRTOS and Zephyr do it: a lower-priority owner is boosted to the blocking waiter's priority until it releases. Stays correct when one task holds several contended mutexes at once.</p>
-        <pre><code>static os_mutex_t lock;
-
-os_mutex_init(&amp;lock);
-os_mutex_lock(&amp;lock, 100U);              <span class="cm">/* ms, or OS_WAIT_FOREVER */</span>
-os_mutex_lock(&amp;lock, OS_WAIT_NOTHING);   <span class="cm">/* never blocks */</span>
+        <pre><code>os_mutex_init(&amp;lock);
+os_mutex_lock(&amp;lock, 100U);            <span class="cm">/* ms, or FOREVER */</span>
+os_mutex_lock(&amp;lock, OS_WAIT_NOTHING); <span class="cm">/* never blocks */</span>
 os_mutex_unlock(&amp;lock);</code></pre>
       </div>
 
       <div class="feat">
-        <h3>Queues - heap-backed</h3>
-        <span class="cfg">OS_CONFIG_QUEUE_ENABLE · OS_CONFIG_ALLOC_ENABLE</span>
-        <p>The same queue with a geometry not known until run time - item size and capacity from a config word, a probed device, a parsed header. Only <code>os_queue_init_dynamic</code> needs the heap, so it is the one call that disappears with <code>OS_CONFIG_ALLOC_ENABLE</code>; everything else behaves identically. The queue object is still yours, only its buffer comes from the heap, which is why a failed init leaves nothing to clean up.</p>
-        <pre><code>OS_QUEUE_DEFINE_DYNAMIC(log_q);
-
-<span class="cm">/* geometry decided at run time */</span>
-os_queue_init_dynamic(&amp;log_q, sizeof(entry_t), n);
-
-os_queue_send(&amp;log_q, &amp;entry, 10U);       <span class="cm">/* same API */</span>
-os_queue_receive(&amp;log_q, &amp;out, OS_WAIT_FOREVER);
-
-os_queue_cleanup(&amp;log_q);   <span class="cm">/* returns the buffer to the heap */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Queues - static storage</h3>
+        <h3>Queues</h3>
         <span class="cfg">OS_CONFIG_QUEUE_ENABLE</span>
-        <p>Fixed-size items copied between tasks, or from an ISR to a task. No heap involved: the buffer is an array the macro declares, so this is the whole queue API on a build with <code>OS_CONFIG_ALLOC_ENABLE</code> at 0. Neither compile-time form takes an item size or a capacity - both are read off the array and so cannot disagree with it.</p>
-        <pre><code><span class="cm">/* usable where it stands, nothing to call */</span>
-OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);
-
-<span class="cm">/* your own buffer - a linker section, DMA RAM */</span>
-OS_QUEUE_DEFINE_BUFFER(rx_q, dma_area);
+        <p>Fixed-size items copied between tasks, or from an ISR to a task. The static form needs no heap and reads its item size and capacity off the array itself, so the two cannot disagree; the dynamic form takes a geometry known only at run time and is the one call that needs <code>OS_CONFIG_ALLOC_ENABLE</code>.</p>
+        <pre><code>OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);  <span class="cm">/* no heap */</span>
+OS_QUEUE_DEFINE_BUFFER(rx_q, dma_area);         <span class="cm">/* your RAM */</span>
+OS_QUEUE_DEFINE_DYNAMIC(log_q);                 <span class="cm">/* sized later */</span>
 
 os_queue_send(&amp;sensor_q, &amp;sample, 10U);
 os_queue_receive(&amp;sensor_q, &amp;out, OS_WAIT_FOREVER);
-
-size_t used = os_queue_count_get(&amp;sensor_q);
-size_t room = os_queue_free_get(&amp;sensor_q);  <span class="cm">/* back-pressure */</span>
-
-os_queue_cleanup(&amp;sensor_q);  <span class="cm">/* empties, keeps the array */</span></code></pre>
+size_t room = os_queue_free_get(&amp;sensor_q);     <span class="cm">/* back-pressure */</span></code></pre>
       </div>
 
       <div class="feat">
         <h3>Message buffers - variable length</h3>
         <span class="cfg">OS_CONFIG_MSG_ENABLE</span>
-        <p>A queue carries N items of one fixed size. This carries whole messages whose <b>length is data</b> - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Sizing a queue for the longest message and then sending mostly short ones spends the difference on every slot; padding them to one size throws away the only thing the receiver needed, which is how many of those bytes are real. Messages arrive whole and in order, one per receive: never a fragment, never two joined.</p>
-        <p>Three refusals replace failures that would otherwise be silent. A destination too small is rejected <b>with the message left in place</b> and its required size reported, so nothing is truncated. A message larger than the whole buffer is refused immediately rather than waited on, because waiting for room that cannot exist is a hang no timeout rescues. And a zero-length message is refused - signalling without bytes is what a semaphore is for.</p>
-        <pre><code><span class="cm">/* a BYTE budget, not a slot count: four commands of up
-   to 32 bytes, or eight of 14, or one of 130 */</span>
-OS_MSG_DEFINE_STATIC(cmd_buf, 4U * OS_MSG_SPACE(32U));
+        <p>A queue carries N items of one fixed size. A message buffer carries whole messages whose length varies - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Each receive returns exactly one message, whole and in order.</p>
+        <pre><code><span class="cm">/* a BYTE budget, not a slot count */</span>
+OS_MSG_DEFINE_STATIC(cmd_buf, 256U);
 
 os_msg_send(&amp;cmd_buf, frame, frame_len, 10U);
 
 uint8_t rx[64];
 size_t  rx_len;
-os_msg_receive(&amp;cmd_buf, rx, sizeof(rx), &amp;rx_len, OS_WAIT_FOREVER);
-
-size_t next = os_msg_peek_size(&amp;cmd_buf);   <span class="cm">/* size a buffer first */</span>
-size_t room = os_msg_free_get(&amp;cmd_buf);    <span class="cm">/* free BYTES */</span>
-
-<span class="cm">/* read room against OS_MSG_SPACE, never a raw length:
-   every message pays for its own header too */</span>
-if (room &gt;= OS_MSG_SPACE(len)) { <span class="cm">/* it fits */</span> }</code></pre>
+os_msg_receive(&amp;cmd_buf, rx, sizeof(rx), &amp;rx_len, OS_WAIT_FOREVER);</code></pre>
       </div>
 
       <div class="feat">
-        <h3>Counting semaphores</h3>
-        <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE</span>
-        <p>Initial and maximum count, with the same <code>timeout_ms</code> convention as everything else: try once, wait a while, or wait forever. Giving is ISR-safe.</p>
-        <pre><code>static os_semaphore_t sem;
-
-os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
+        <h3>Semaphores and events</h3>
+        <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE · OS_CONFIG_EVENT_ENABLE</span>
+        <p>A counting semaphore for one signal with a maximum; an event group to wait on a set of bits, for all or any of them, clearing what matched on the way out. Both are ISR-safe to signal.</p>
+        <pre><code>os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
 os_semaphore_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
-os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
-      </div>
+os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);
 
-      <div class="feat">
-        <h3>Events</h3>
-        <span class="cfg">OS_CONFIG_EVENT_ENABLE</span>
-        <p>Wait on a set of bits, for all of them or any of them, optionally clearing what matched on the way out. The classic fan-in primitive when several producers must each report done.</p>
-        <pre><code>static os_event_t evt;
-uint32_t matched;
-
-os_event_init(&amp;evt);
-os_event_set_bits(&amp;evt, 0x1U);      <span class="cm">/* ISR-safe */</span>
-os_event_wait_bits(&amp;evt, 0x7U,
-                   true,   <span class="cm">/* wait for all  */</span>
-                   true,   <span class="cm">/* clear on exit */</span>
-                   &amp;matched, 500U);</code></pre>
+os_event_set_bits(&amp;evt, 0x1U);     <span class="cm">/* ISR-safe */</span>
+os_event_wait_bits(&amp;evt, 0x7U, true, true, &amp;matched, 500U);
+                          <span class="cm">/*  all^  clear^ */</span></code></pre>
       </div>
 
       <div class="feat">
@@ -638,127 +586,88 @@ os_event_wait_bits(&amp;evt, 0x7U,
         <p>A single-value mailbox built into every task's own control block, so one task or an ISR can signal a specific task without allocating an object for it. The lightest signal the kernel has.</p>
         <pre><code>os_notify_give(&amp;worker, 42U);   <span class="cm">/* ISR-safe */</span>
 
-uint32_t value;
 os_notify_wait(OS_WAIT_FOREVER, &amp;value);
-
-<span class="cm">/* NULL when only the wake-up matters */</span>
-os_notify_wait(OS_WAIT_FOREVER, NULL);</code></pre>
+os_notify_wait(OS_WAIT_FOREVER, NULL);  <span class="cm">/* wake-up only */</span></code></pre>
       </div>
 
       <div class="feat">
-        <h3>Software timers</h3>
+        <h3>Timers and deferred calls</h3>
         <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
-        <p>One-shot or periodic, with callbacks running on a dedicated kernel task rather than in the tick interrupt. Periods reload in the tick, so a periodic timer does not drift with callback latency.</p>
+        <p>One-shot or periodic, with callbacks on a dedicated kernel task rather than in the tick interrupt, so a periodic timer does not drift with callback latency. Two things get called &quot;later&quot;, so there are two calls: <code>start</code> reschedules - one callback, latest event, a debounce - while <code>submit</code> queues, so an ISR firing three times runs the callback three times.</p>
         <pre><code><span class="cm">/* the macro names the kind - no mode to pass, none to get wrong */</span>
 OS_TIMER_DEFINE_PERIODIC(t, 250U, on_expiry);
-
-os_timer_start(&amp;t, &amp;dev, 3U);    <span class="cm">/* ctx + value for this run */</span>
-os_timer_restart(&amp;t, &amp;dev, 3U);  <span class="cm">/* always a full period     */</span>
-os_timer_pause(&amp;t);              <span class="cm">/* keeps the time left      */</span>
-os_timer_stop(&amp;t);
-
-<span class="cm">/* and each of these is changeable at run time */</span>
-os_timer_period_set(&amp;t, 100U);
-os_timer_callback_set(&amp;t, other_cb);
-os_timer_value_set(&amp;t, 7U);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Deferred calls</h3>
-        <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
-        <p>Two things get called &quot;later&quot;, so there are two calls. <code>os_timer_start</code> reschedules - one callback, latest event, which is a debounce. <code>os_timer_submit</code> queues - an ISR firing three times runs the callback three times, each with its own value. The pool is yours, declared where the work is, so FULL is always local and there is no kernel-wide number.</p>
-        <pre><code>static void handler(void *context, uint32_t value);
+os_timer_start(&amp;t, &amp;dev, 3U);   <span class="cm">/* ctx + value for this run */</span>
+os_timer_period_set(&amp;t, 100U);  <span class="cm">/* changeable at run time */</span>
 
 OS_TIMER_DEFINE_SUBMIT(events, 8U, 0U, handler);
-
-os_timer_submit(&amp;events, &amp;device, code1);  <span class="cm">/* in the ISR   */</span>
-os_timer_submit(&amp;events, &amp;device, code2);  <span class="cm">/* fires again  */</span>
-<span class="cm">/* runs twice: code1, then code2 - neither lost */</span></code></pre>
+os_timer_submit(&amp;events, &amp;device, code);  <span class="cm">/* queues, never merges */</span></code></pre>
       </div>
 
       <div class="feat">
-        <h3>Atomics</h3>
-        <span class="cfg">OS_CONFIG_ATOMIC_ENABLE</span>
-        <p>A full operation set on a 32-bit word, every one returning the value from <em>before</em> it ran. Lock-free where the core has exclusive load/store; a critical section where it does not - the API and its behaviour are identical either way.</p>
+        <h3>Atomics and the kernel heap</h3>
+        <span class="cfg">OS_CONFIG_ATOMIC_ENABLE · OS_CONFIG_ALLOC_ENABLE</span>
+        <p>A full atomic operation set on a 32-bit word, every one returning the value from <em>before</em> it ran - lock-free where the core has exclusive load/store, a critical section where it does not. The heap is a coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>, taking nothing from the linker heap.</p>
         <pre><code>static os_atomic_t counter = OS_ATOMIC_INIT(0);
-
 os_atomic_inc(&amp;counter);        <span class="cm">/* returns the OLD value */</span>
-os_atomic_add(&amp;counter, 5);
-os_atomic_or(&amp;flags, 0x4);
 os_atomic_cas(&amp;counter, 10, 20);
-os_atomic_set_bit(&amp;flags, 3U);</code></pre>
-      </div>
 
-      <div class="feat">
-        <h3>Kernel heap</h3>
-        <span class="cfg">OS_CONFIG_ALLOC_ENABLE</span>
-        <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>. Nothing is taken from the linker heap, and the whole thing compiles out when unused.</p>
-        <pre><code>void *p = os_mem_alloc(64U);
-os_mem_free(p);
-
-size_t free_now  = os_mem_free_get();
+void *p = os_mem_alloc(64U);
 size_t worst_ever = os_mem_watermark_get();</code></pre>
       </div>
 
       <div class="feat">
-        <h3>Stack overflow detection</h3>
-        <span class="cfg">OS_CONFIG_STACK_CHECK_ENABLE</span>
-        <p>On every switch away from a task the kernel checks its stack pointer is still inside its own stack and that a guard word at the bottom is intact, then parks the core on a hit. ARMv8-M mainline traps this in hardware; on every other core this is the only detection there is.</p>
+        <h3>Stack checks and diagnostics</h3>
+        <span class="cfg">OS_CONFIG_STACK_CHECK_ENABLE · _WATERMARK_ · _CPU_USAGE_</span>
+        <p>On every switch away from a task the kernel checks its stack pointer is still inside its own stack and that a guard word is intact - on every core but ARMv8-M mainline, the only detection there is. Watermarking reports the worst-case headroom a task has ever had; CPU sampling counts ticks that interrupted the idle task versus anything else.</p>
         <pre><code><span class="cm">/* you define it; no kernel default, so a missing
-   one is a link error rather than a silent detector */</span>
-void os_stack_overflow_cb(const char *task_name)
-{
-    <span class="cm">/* write it somewhere: UART, retained RAM, bkpt */</span>
-}</code></pre>
-      </div>
+   one is a link error, not a silent detector */</span>
+void os_stack_overflow_cb(const char *task_name);
 
-      <div class="feat">
-        <h3>Diagnostics</h3>
-        <span class="cfg">OS_CONFIG_STACK_WATERMARK_ENABLE · OS_CONFIG_CPU_USAGE_ENABLE</span>
-        <p>Stack watermarking pattern-fills each stack at creation and reports the worst-case headroom a task has ever had. CPU sampling counts how many ticks interrupted the idle task versus anything else. Both opt-in, both close to free.</p>
-        <pre><code>size_t min_free;
 os_task_stack_watermark_get(task, &amp;min_free);
-
 uint32_t percent = os_cpu_usage_get();  <span class="cm">/* since last call */</span></code></pre>
       </div>
 
       <div class="feat">
         <h3>Logging and assertions</h3>
         <span class="cfg">OS_CONFIG_LOG_ENABLE · OS_CONFIG_ASSERT_ENABLE</span>
-        <p>Log calls format into a ring buffer and a dedicated task drains it, so a logging task is never blocked on the transport. Assertions call your hook and then park the core - the kernel ships no default, so forgetting it is a link error rather than an unexplained halt.</p>
+        <p>Log calls format into a ring buffer and a dedicated task drains it, so a logging task is never blocked on the transport. Assertions call your hook and park the core - the kernel ships no default, so forgetting it is a link error.</p>
         <pre><code>OS_LOG_INFO("sensor = %d", value);
 OS_LOG_ERROR("i2c timeout on 0x%02X", addr);
-
 uint32_t lost = os_log_dropped_get();
 
 OS_ASSERT(index &lt; count);</code></pre>
       </div>
 
       <div class="feat">
+        <h3>Multi-core</h3>
+        <span class="cfg">OS_CONFIG_CORE_COUNT</span>
+        <p>SMP scheduling with a per-task core-affinity mask over shared ready lists. A task can be pinned to one core, or left free to run on any of them.</p>
+        <pre><code><span class="cm">/* cores are numbered from 0 */</span>
+OS_TASK_CONFIG(entry, NULL, prio, OS_TASK_CORE(0));
+
+<span class="cm">/* or a set of allowed cores */</span>
+OS_TASK_CONFIG(entry, NULL, prio,
+               OS_TASK_CORE(0) | OS_TASK_CORE(1));</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Tickless idle</h3>
+        <span class="cfg">OS_CONFIG_TICKLESS_ENABLE</span>
+        <span class="untested">not completed</span>
+        <p>Suppressing the tick across a known-idle window, with two callbacks around the sleep. The ARMv8-M port implements it, but it is not yet wired into the idle task, so today the switch changes nothing at run time.</p>
+        <pre><code>void os_tickless_pre_sleep_cb(void);   <span class="cm">/* gate clocks  */</span>
+void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span></code></pre>
+      </div>
+
+      <div class="feat">
         <h3>TrustZone</h3>
         <span class="cfg">OS_CONFIG_TRUSTZONE</span>
         <span class="untested">not tested on hardware</span>
-        <p>Secure, non-secure or disabled, chosen per build on ARMv8-M. In non-secure mode the context switch banks each task's secure state through two callbacks you provide - the kernel ships no defaults, so forgetting them is a link error rather than a task switched without its secure state. <b>Treat this as unproven:</b> the code compiles and the callbacks are wired, but none of it has been exercised on a part with the Security Extension enabled.</p>
+        <p>Secure, non-secure or disabled, chosen per build on ARMv8-M. In non-secure mode the context switch banks each task's secure state through two callbacks you provide. The code compiles and the callbacks are wired, but none of it has been exercised on a part with the Security Extension enabled.</p>
         <pre><code>#define OS_CONFIG_TRUSTZONE  OS_CONFIG_TRUSTZONE_NON_SECURE
 
 void os_arch_tz_context_save_cb(uint32_t task_id);
 void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Multi-core and tickless</h3>
-        <span class="cfg">OS_CONFIG_CORE_COUNT · OS_CONFIG_TICKLESS_ENABLE</span>
-        <span class="tested">SMP verified on RP2350 and RP2040 · tickless untested</span>
-        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists, verified end-to-end on three dual-core targets with a dedicated cross-core stress section in the self-test: the RP2350's Cortex-M33 pair, the same chip's Hazard3 RISC-V pair, and the RP2040's Cortex-M0+ pair. Tickless idle suppresses the tick across a known-idle window - implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
-        <pre><code><span class="cm">/* Cores are numbered from 0: a dual-core part is core 0 and core 1 */</span>
-OS_TASK_CONFIG(entry, NULL, prio, OS_TASK_CORE(0));
-
-<span class="cm">/* Or a set of allowed cores */</span>
-OS_TASK_CONFIG(entry, NULL, prio,
-               OS_TASK_CORE(0) | OS_TASK_CORE(1));
-
-void os_tickless_pre_sleep_cb(void);   <span class="cm">/* gate clocks */</span>
-void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span></code></pre>
       </div>
 
     </div>
@@ -776,56 +685,56 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <div class="flow-item">
         <div class="flow-key">choosing a task</div>
         <div class="flow-val">
-          One <b>FIFO ready list per priority</b>, plus a <b>32-bit bitmap</b> where bit <i>n</i> means "priority <i>n</i> has someone ready". Picking the next task is one count-leading-zeros on the bitmap and then the head of that list - <b>O(1)</b>, whatever the task count. Equal priorities rotate round-robin, because a preempted task goes back to the tail of its own list; how long a task holds the CPU before that happens is the time slice, and a tick that would not switch anything costs one bitmap check instead of a full <code>PendSV</code> round trip.
+          One <b>FIFO ready list per priority</b>, plus a <b>32-bit bitmap</b> where bit <i>n</i> means "priority <i>n</i> has someone ready". Picking the next task is one count-leading-zeros on the bitmap and then the head of that list - <b>O(1)</b>, whatever the task count. Equal priorities rotate round-robin over the time slice, because a preempted task goes back to the tail of its own list.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">switching to it</div>
         <div class="flow-val">
-          The switch lives in <b>PendSV</b>, the lowest-priority exception, so it can never preempt an ISR - a real switch always happens after every pending interrupt has finished. It is the <b>only</b> exception the kernel takes over: the very first task starts through the same handler, down its "no task has run yet" path, which leaves <code>SVC</code> entirely to the application. The hardware stacks half the frame; the port stacks the rest (<code>r4-r11</code>, <code>EXC_RETURN</code>, and the FPU registers only when that task has actually used the FPU).
+          The switch lives in the lowest-priority exception - <b>PendSV</b> on Cortex-M, the machine software interrupt on RISC-V - so it can never preempt an ISR. It is the <b>only</b> exception the kernel takes over: the very first task starts through the same handler, down its "no task has run yet" path, which leaves <code>SVC</code> entirely to the application.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">measuring time</div>
         <div class="flow-val">
-          <code>SysTick</code> drives one counter. Each tick advances delayed tasks and software timers, then pends PendSV <b>only if that tick actually made someone runnable</b> - a quiescent tick costs a bitmap check instead of a full switch. Only finite sleepers sit in the delay list, so the cost is proportional to tasks that are sleeping, not to tasks that exist.
+          One hardware counter drives the tick. Each tick advances delayed tasks and software timers, then asks for a switch <b>only if that tick actually made someone runnable</b> - a quiescent tick costs a bitmap check. Only finite sleepers sit in the delay list, so the cost follows the tasks that are sleeping, not the tasks that exist.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">storing tasks</div>
         <div class="flow-val">
-          A <b>fixed array</b> of control blocks, sized at compile time - no allocation, ever. The intrusive scheduling lists thread through nodes embedded <i>inside</i> those blocks, so a task is an array element and a list member at once with nothing allocated for either. Handles carry an id rather than a pointer, which is what lets the kernel reject a stale handle instead of following it.
+          A <b>fixed array</b> of control blocks, sized at compile time - no allocation, ever. The scheduling lists thread through nodes embedded <i>inside</i> those blocks, so a task is an array element and a list member at once. Handles carry an id rather than a pointer, which is what lets the kernel reject a stale handle instead of following it.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">blocking</div>
         <div class="flow-val">
-          Every wait - mutex, semaphore, queue, event, notification - takes the same shape: check the condition inside a critical section, and if it is not met, join the object's waiter list <i>in that same section</i>. There is no window in which a signal can arrive unseen. Timeouts are recomputed against the wall clock on each pass, so time spent merely READY still counts against the budget.
+          Every wait - mutex, semaphore, queue, message, event, notification - takes the same shape: check the condition inside a critical section, and if it is not met, join the object's waiter list <i>in that same section</i>. There is no window in which a signal can arrive unseen.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">deferred callbacks</div>
         <div class="flow-val">
-          Timer callbacks and work handlers never run in interrupt context. Each has its own <b>kernel service task</b> at the top priority, woken directly by the tick through a cached control-block pointer. So a callback may use kernel APIs like any other task - but it preempts everything, so it should be short.
+          Timer callbacks and work handlers never run in interrupt context: each has its own <b>kernel service task</b> at the top priority. So a callback may use kernel APIs like any other task - but it preempts everything, so keep it short.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">what the port owns</div>
         <div class="flow-val">
-          Only what the CPU actually decides: the context switch, the tick, the critical-section mask, the atomic operations and the low-power hooks. Everything above that is ordinary portable C. That boundary is why the whole Cortex-M range, M0 through M85, is covered by <b>three</b> shared port files - and why a new architecture is a new port rather than a kernel change.
+          Only what the CPU actually decides: the context switch, the tick, the critical-section mask, the atomics and the low-power hooks. Everything above that is ordinary portable C - which is why the whole Cortex-M range, M0 through M85, is covered by <b>three</b> shared port files, and why RISC-V was a new port rather than a kernel change.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">configuration</div>
         <div class="flow-val">
-          One application-owned <code>os_config.h</code>, copied from a template, visible to both the application and the kernel library so their structure sizes can never disagree. Every option is a plain define, and an incomplete file is a compile error rather than a silently disabled feature. The kernel itself ships <b>no</b> editable configuration.
+          One application-owned <code>os_config.h</code>, copied from a template and visible to both the application and the kernel library, so their structure sizes can never disagree. An incomplete file is a compile error rather than a silently disabled feature, and the kernel itself ships <b>no</b> editable configuration.
         </div>
       </div>
 
@@ -837,11 +746,11 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
   <div class="wrap">
     <div class="eyebrow">Installation</div>
     <h2 class="h2">Six steps by hand - or one command on STM32CubeMX or the Pico SDK</h2>
-    <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract, and it is why the same kernel drops onto an STM32, an nRF52 and an LPC without changing anything but a config file.</p>
+    <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV on Cortex-M - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract.</p>
 
     <div class="oneliner">
       <h3>One command, on a CubeMX CMake project</h3>
-      <p class="ol-sub">Run it from the root of your project - the directory holding <code>CMakeLists.txt</code> and the <code>.ioc</code>. It fetches the kernel, copies the three application-owned files, adds the CMake block, routes the tick and wires up <code>os_init()</code> / <code>os_start()</code>. It prints the exact diff first and asks before writing anything.</p>
+      <p class="ol-sub">Run it from the root of your project - the directory holding <code>CMakeLists.txt</code> and the <code>.ioc</code>. It fetches the kernel, copies the three application-owned files, adds the CMake block, routes the tick and wires up <code>os_init()</code> / <code>os_start()</code>, printing the exact diff first and asking before it writes anything.</p>
 
       <div class="ol-cmd">
         <span class="ol-os">Windows &middot; PowerShell</span>
@@ -859,11 +768,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       </div>
 
       <p class="ol-foot">
-        Python 3.8+ and nothing else - no <code>pip install</code>, and nothing saved into your project but the integration itself. <b>It never opens the <code>.ioc</code></b>: that file is what CubeMX generates <em>from</em>, and everything the script needs is in the generated sources. Every C edit goes inside a CubeMX <code>USER CODE</code> section, so regeneration keeps it, and your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist.
-        <br><br>
-        <b>Running it twice is free.</b> It checks what is already in place and fills in only what is missing - which also makes it the repair when CubeMX regenerates over the integration. <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out.
-        <br><br>
-        <b>Air-gapped, or behind a locked-down network?</b> Clone the repository - or use GitHub's <em>Download ZIP</em> - on a machine that has a connection, copy it into your project, and run the offline installer from the project root. It carries out the same six steps from that local copy and produces the same result; the only difference is where the kernel comes from. It imports no networking module at all, so being offline is a property of the file rather than a promise in a comment.
+        Python 3.8+ and nothing else. Every C edit goes inside a CubeMX <code>USER CODE</code> section, so regeneration keeps it, and your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist. <b>Running it twice is free</b> - it fills in only what is missing, which is also the repair after CubeMX regenerates over the integration. <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out.
         <br><br>
         Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">STM32CubeMX &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
       </p>
@@ -871,7 +776,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
 
     <div class="oneliner">
       <h3>One command, on a Raspberry Pi Pico SDK project</h3>
-      <p class="ol-sub">Run it from the root of your project - the directory holding the top-level <code>CMakeLists.txt</code> and <code>pico_sdk_import.cmake</code>. It detects the board, selects the matching SoC package (<code>raspberrypi/rp2040</code> or <code>raspberrypi/rp235x_arm</code>), copies the three application-owned files plus the package's <code>soc_config.h</code>, adds the CMake block and wires up <code>os_init()</code> / <code>os_start()</code> in <code>main()</code>. There is no PendSV or SysTick step - the package supplies both vectors. It prints the exact diff first and asks before writing anything.</p>
+      <p class="ol-sub">Run it from the root of your project - the directory holding the top-level <code>CMakeLists.txt</code> and <code>pico_sdk_import.cmake</code>. It detects the board, selects the matching SoC package (<code>rp2040</code>, <code>rp235x_arm</code> or <code>rp235x_riscv</code>), copies the application-owned files and adds the CMake block. There is no tick or PendSV step - the package supplies both vectors.</p>
 
       <div class="ol-cmd">
         <span class="ol-os">Windows &middot; PowerShell</span>
@@ -889,8 +794,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       </div>
 
       <p class="ol-foot">
-        Same rules as the STM32 installer: Python 3.8+ and nothing else, your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist, <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out, and the offline twin runs the same steps from a local copy of the repository.
-        <br><br>
+        Same rules as the STM32 installer, and the offline twin runs the same steps from a local copy of the repository.
         Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Raspberry Pi Pico SDK &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
       </p>
     </div>
@@ -898,7 +802,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
     <div class="readme-note">
       <div class="rn-icon">📖</div>
       <div class="rn-body">
-        <b>The docs are the installation guide.</b> They ship with the kernel in the same repository and are kept in step with it, so the procedure is written down in exactly one place rather than copied here to drift out of date. It covers the same six steps three times - once independent of vendor and toolchain, then carried out on real hardware with ST tooling and on the Raspberry Pi Pico SDK - and each page ends with a table that names the cause of every common build error.
+        <b>The docs are the installation guide.</b> They ship with the kernel in the same repository, so the procedure is written down in exactly one place rather than copied here to drift out of date. The same six steps three times - vendor-independent, then on ST tooling and on the Raspberry Pi Pico SDK - and each page ends with a table naming the cause of every common build error.
       </div>
       <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Read the install guide &rarr;</a>
     </div>
@@ -908,19 +812,19 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">
         <div class="ic-tag">Any platform, any toolchain</div>
         <h4>Manual installation <span class="arw">&rarr;</span></h4>
-        <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists, and the installation page gives them.</p>
+        <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists.</p>
       </a>
 
       <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md" target="_blank" rel="noopener">
         <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
         <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
-        <p>The same steps on a NUCLEO-H503RB, verified end to end - and what the one command above does for you. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the <code>CMakeLists.txt</code> block, and what survives regeneration.</p>
+        <p>The same steps on a NUCLEO-H503RB, verified end to end. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the CMake block, and what survives regeneration.</p>
       </a>
 
       <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md" target="_blank" rel="noopener">
         <div class="ic-tag">Raspberry Pi Pico SDK</div>
         <h4>Step by step on RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
-        <p>The Pico page, three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, and the package supplies the PendSV vector and the tick - nothing to route yourself. Verified end to end on the RP2350 and the RP2040, including dual-core SMP with the self-test's cross-core stress section.</p>
+        <p>Three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, which supplies the switch vector and the tick - nothing to route yourself. Verified end to end on the RP2350 and the RP2040, including dual-core SMP.</p>
       </a>
 
     </div>
@@ -934,51 +838,19 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
     <div class="eyebrow">Verify</div>
     <h2 class="h2">Prove the port before you build on it</h2>
     <p class="lede">The kernel ships a self-test suite that exercises every enabled feature and reports PASS/FAIL over <code>printf</code>, finishing with a cycle-accurate benchmark table. It needs no application code and no board support beyond a working <code>printf</code>, which makes it the fastest way to confirm a new target is correctly integrated - before anything is built on top of it.</p>
-    <div class="grid">
-      <div class="card">
-        <div class="icon">1</div>
-        <h3>Turn it on</h3>
-        <p>In <code>os_config.h</code>. The test task replaces the default application task, so the suite runs alone and <code>os_main()</code> is never called.</p>
-        <pre><code>#define OS_CONFIG_TEST_ENABLE  1U</code></pre>
-      </div>
-      <div class="card">
-        <div class="icon">2</div>
-        <h3>Link the suite</h3>
-        <p>The kernel ships no stub for <code>os_test()</code>, not even a weak one, so forgetting this is a link error rather than a test build that silently tests nothing.</p>
-        <pre><code>add_subdirectory(AhuraRTOS/kernel/test)
-target_link_libraries(my_firmware os_test)</code></pre>
-      </div>
-      <div class="card">
-        <div class="icon">3</div>
-        <h3>Let the suite own the log hook</h3>
-        <p>With <code>OS_CONFIG_LOG_ENABLE</code> also on, the suite defines <code>os_log_output_cb</code> itself so it can inspect what the kernel emitted. Your <code>os_cb.c</code> steps aside - the current template already guards it.</p>
-        <pre><code>#if (OS_CONFIG_LOG_ENABLE == 1U) &amp;&amp; \
-    (OS_CONFIG_TEST_ENABLE == 0U)</code></pre>
-      </div>
-    </div>
-    <div class="flow" style="margin-top:26px;">
+    <div class="flow">
 
       <div class="flow-item">
-        <div class="flow-key">one switch, not two</div>
+        <div class="flow-key">turning it on</div>
         <div class="flow-val">
-          Rather than keep the define and the library in sync by hand, have CMake read the switch out of the config - and register <code>os_config.h</code> as a configure dependency, since a header is not otherwise a configure-time dependency and the build would go on linking the previous choice. Flipping the define then <i>is</i> the whole procedure.
-          <pre style="margin-top:14px;"><code>set_property(DIRECTORY APPEND PROPERTY
-             CMAKE_CONFIGURE_DEPENDS ${OS_CONFIG_DIR}/os_config.h)
-
-file(READ ${OS_CONFIG_DIR}/os_config.h _os_cfg)
-if(_os_cfg MATCHES "#define[ \t]+OS_CONFIG_TEST_ENABLE[ \t]+1")
-    add_subdirectory(AhuraRTOS/kernel/test)
-    set(AHURA_TEST_LIB os_test)
-endif()
-
-target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
+          One switch in <code>os_config.h</code> and one line of CMake - both in the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/self-test.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">self-test guide</a>. The test task replaces the application task, so the suite runs alone and <code>os_main()</code> is never called.
         </div>
       </div>
 
       <div class="flow-item">
         <div class="flow-key">budget the flash</div>
         <div class="flow-val">
-          The suite is deliberately exhaustive, and most of its footprint is the <code>.rodata</code> behind those PASS/FAIL strings: <b>roughly 100 KB at <code>-Os</code></b>, against about 20 KB for a small application. On a 128 KB part that means <b>run it from a Release (<code>-Os</code>) build</b> - measured on a NUCLEO-H503RB, the suite lands at 130 KB of 128 KB available at <code>-O0</code> and does not link, while <code>-Os</code> fits at 99%. The linker says so plainly rather than producing a broken image, and the suite already drops its extended stress tests (~15 KB) in unoptimized builds for the same reason. Parts with 256 KB or more take either. Once the port is verified, set the switch back to <code>0</code> and the suite leaves the image entirely.
+          Most of the suite's footprint is the <code>.rodata</code> behind those PASS/FAIL strings - <b>roughly 100 KB at <code>-Os</code></b>, against about 20 KB for a small application. On a 128 KB part, <b>build it Release</b>: on a NUCLEO-H503RB the suite does not link at <code>-O0</code> and fits at 99% with <code>-Os</code>. Parts with 256 KB or more take either. Set the switch back to <code>0</code> and the suite leaves the image entirely.
         </div>
       </div>
 
@@ -997,15 +869,16 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
         <p class="lede" style="margin-bottom:24px;">The kernel, the examples and the documentation all live in <a href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">one repository</a>. A plain <code>git clone</code> gives you everything - nothing to initialise, nothing to keep in step.</p>
         <div class="tree-box">
 <pre><code>AhuraRTOS/
+├── ahura.h     ← the one public header
+├── kernel/     ← portable core, no CPU in it
+├── arch/       ← CPU ports: Cortex-M, RV32
+├── soc/        ← vendor packages
+├── template/   ← os_config.h, os_cb.c
+├── test/       ← self-test suite
+├── examples/   ← one runnable main per feature
 ├── doc/        ← installation, vendor notes,
 │               kernel reference, self-test
-├── kernel/     ← core, arch ports, templates,
-│               self-test suite
-├── examples/   ← one runnable main per feature
-├── tools/      ← one-command installers: CubeMX
-│               and Pico SDK, each with an
-│               offline twin
-├── LICENSE
+├── tools/      ← one-command installers
 └── README.md   ← project overview</code></pre>
         </div>
       </div>
@@ -1042,7 +915,7 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
         <p>Configuration and build tooling, optional modules (filesystem, additional IPC), community-driven extensions.</p>
       </div>
     </div>
-    <div class="gaps"><b>Not yet proven on hardware:</b> TrustZone and tickless idle. Both build and are exercised in CI, but neither has been run on a part that actually has the feature - treat them as unfinished rather than as capabilities you can rely on today. Multi-core scheduling is verified on the RP2350, on both its Cortex-M33 and Hazard3 cores, and on the RP2040 (see above). Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
+    <div class="gaps"><b>Not finished:</b> tickless idle is implemented in the ARMv8-M port but not yet wired into the idle task, so the switch changes nothing at run time. <b>Not proven on hardware:</b> TrustZone builds and its callbacks are wired, but none of it has run on a part with the Security Extension enabled. Multi-core scheduling is verified on the RP2350, on both its Cortex-M33 and Hazard3 cores, and on the RP2040. Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
   </div>
 </section>
 
