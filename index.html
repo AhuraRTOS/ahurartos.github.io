@@ -411,7 +411,7 @@
       <a href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
       <a href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
     </div>
-    <p class="mcu-caption">Ports available today - ARM Cortex-M</p>
+    <p class="mcu-caption">Ports available today - ARM Cortex-M and RISC-V</p>
     <div class="mcu-strip">
       <span class="mcu-chip">Cortex-M0</span>
       <span class="mcu-chip">M0+</span>
@@ -424,10 +424,10 @@
       <span class="mcu-chip">M52</span>
       <span class="mcu-chip">M55</span>
       <span class="mcu-chip">M85</span>
+      <span class="mcu-chip">RV32 / Hazard3</span>
     </div>
     <p class="mcu-caption">Planned - same port interface, no core changes</p>
     <div class="mcu-strip">
-      <span class="mcu-chip planned">RISC-V</span>
       <span class="mcu-chip planned">Xtensa / ESP32</span>
       <span class="mcu-chip planned">more to come</span>
     </div>
@@ -448,12 +448,12 @@
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg></div>
         <h3>Multi-platform by design</h3>
-        <p>The core is portable C. A port supplies only what the CPU decides - context switch, tick, critical section, atomics, low-power hooks - so a new architecture is a new port, not a kernel change. ARM Cortex-M ships today: ARMv6-M through ARMv8.1-M, M0 to M85, in three shared port files. RISC-V and Xtensa/ESP32 are next (see Roadmap).</p>
+        <p>The core is portable C. A port supplies only what the CPU decides - context switch, tick, critical section, atomics, low-power hooks - so a new architecture is a new port, not a kernel change. Two instruction sets ship today: ARM Cortex-M, ARMv6-M through ARMv8.1-M, M0 to M85, in three shared port files; and RV32, verified on the RP2350's Hazard3 cores including dual-core SMP. Xtensa/ESP32 is next (see Roadmap).</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3-3M17 17l-3 3"/></svg></div>
         <h3>IPC, sync &amp; task notifications</h3>
-        <p>Mutexes with priority inheritance, semaphores, queues, events, and lightweight per-task notifications - all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
+        <p>Mutexes with priority inheritance, semaphores, queues, variable-length message buffers, events, and lightweight per-task notifications - all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="12" y2="17"/></svg></div>
@@ -474,8 +474,8 @@
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg></div>
         <h3>Multi-core scheduling</h3>
-        <span class="tested">verified on RP2350</span>
-        <p>Per-task core affinity across shared ready lists, verified end-to-end on the RP2350's dual Cortex-M33 - the self-test runs a dedicated cross-core stress section. The RP2040's ARMv6-M path builds in CI but has not run on silicon.</p>
+        <span class="tested">verified on RP2350 and RP2040</span>
+        <p>Per-task core affinity across shared ready lists, verified end-to-end on three dual-core targets - the RP2350's Cortex-M33 pair, the same chip's Hazard3 RISC-V pair, and the RP2040's Cortex-M0+ pair - each running the self-test's dedicated cross-core stress section.</p>
       </div>
       <div class="card">
         <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg></div>
@@ -581,6 +581,29 @@ size_t used = os_queue_count_get(&amp;sensor_q);
 size_t room = os_queue_free_get(&amp;sensor_q);  <span class="cm">/* back-pressure */</span>
 
 os_queue_cleanup(&amp;sensor_q);  <span class="cm">/* empties, keeps the array */</span></code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Message buffers - variable length</h3>
+        <span class="cfg">OS_CONFIG_MSG_ENABLE</span>
+        <p>A queue carries N items of one fixed size. This carries whole messages whose <b>length is data</b> - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Sizing a queue for the longest message and then sending mostly short ones spends the difference on every slot; padding them to one size throws away the only thing the receiver needed, which is how many of those bytes are real. Messages arrive whole and in order, one per receive: never a fragment, never two joined.</p>
+        <p>Three refusals replace failures that would otherwise be silent. A destination too small is rejected <b>with the message left in place</b> and its required size reported, so nothing is truncated. A message larger than the whole buffer is refused immediately rather than waited on, because waiting for room that cannot exist is a hang no timeout rescues. And a zero-length message is refused - signalling without bytes is what a semaphore is for.</p>
+        <pre><code><span class="cm">/* a BYTE budget, not a slot count: four commands of up
+   to 32 bytes, or eight of 14, or one of 130 */</span>
+OS_MSG_DEFINE_STATIC(cmd_buf, 4U * OS_MSG_SPACE(32U));
+
+os_msg_send(&amp;cmd_buf, frame, frame_len, 10U);
+
+uint8_t rx[64];
+size_t  rx_len;
+os_msg_receive(&amp;cmd_buf, rx, sizeof(rx), &amp;rx_len, OS_WAIT_FOREVER);
+
+size_t next = os_msg_peek_size(&amp;cmd_buf);   <span class="cm">/* size a buffer first */</span>
+size_t room = os_msg_free_get(&amp;cmd_buf);    <span class="cm">/* free BYTES */</span>
+
+<span class="cm">/* read room against OS_MSG_SPACE, never a raw length:
+   every message pays for its own header too */</span>
+if (room &gt;= OS_MSG_SPACE(len)) { <span class="cm">/* it fits */</span> }</code></pre>
       </div>
 
       <div class="feat">
@@ -725,8 +748,8 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
       <div class="feat">
         <h3>Multi-core and tickless</h3>
         <span class="cfg">OS_CONFIG_CORE_COUNT · OS_CONFIG_TICKLESS_ENABLE</span>
-        <span class="tested">SMP verified on RP2350 · tickless untested</span>
-        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists, verified end-to-end on the RP2350's dual Cortex-M33 with a dedicated cross-core stress section in the self-test; the RP2040's ARMv6-M path builds in CI but has not run on silicon. Tickless idle suppresses the tick across a known-idle window - implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
+        <span class="tested">SMP verified on RP2350 and RP2040 · tickless untested</span>
+        <p>SMP scheduling gives each task a core-affinity mask over shared ready lists, verified end-to-end on three dual-core targets with a dedicated cross-core stress section in the self-test: the RP2350's Cortex-M33 pair, the same chip's Hazard3 RISC-V pair, and the RP2040's Cortex-M0+ pair. Tickless idle suppresses the tick across a known-idle window - implemented on the ARMv8-M port, but not yet wired into the idle task, so today it changes nothing at run time.</p>
         <pre><code><span class="cm">/* Cores are numbered from 0: a dual-core part is core 0 and core 1 */</span>
 OS_TASK_CONFIG(entry, NULL, prio, OS_TASK_CORE(0));
 
@@ -897,7 +920,7 @@ void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span
       <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md" target="_blank" rel="noopener">
         <div class="ic-tag">Raspberry Pi Pico SDK</div>
         <h4>Step by step on RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
-        <p>The Pico page, three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, and the package supplies the PendSV vector and the tick - nothing to route yourself. Verified end to end on the RP2350, including dual-core SMP with the self-test's cross-core stress section.</p>
+        <p>The Pico page, three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, and the package supplies the PendSV vector and the tick - nothing to route yourself. Verified end to end on the RP2350 and the RP2040, including dual-core SMP with the self-test's cross-core stress section.</p>
       </a>
 
     </div>
@@ -1011,7 +1034,7 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
       <div class="phase">
         <div class="phase-tag">Phase 2 - Planned</div>
         <h3>More architectures</h3>
-        <p>Ports for further instruction sets (RISC-V, Xtensa/ESP32), modular driver interfaces, consistent cross-platform APIs. Vendor families built on Cortex-M - NXP, TI, Nordic - already work through the ARM ports today.</p>
+        <p>Ports for further instruction sets (Xtensa/ESP32), modular driver interfaces, consistent cross-platform APIs. Vendor families built on Cortex-M - NXP, TI, Nordic - already work through the ARM ports today.</p>
       </div>
       <div class="phase">
         <div class="phase-tag">Phase 3 - Planned</div>
@@ -1019,7 +1042,7 @@ target_link_libraries(my_firmware ahura_kernel ${AHURA_TEST_LIB})</code></pre>
         <p>Configuration and build tooling, optional modules (filesystem, additional IPC), community-driven extensions.</p>
       </div>
     </div>
-    <div class="gaps"><b>Not yet proven on hardware:</b> TrustZone and tickless idle. Both build and are exercised in CI, but neither has been run on a part that actually has the feature - treat them as unfinished rather than as capabilities you can rely on today. Multi-core scheduling is verified on the RP2350 (see above). Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
+    <div class="gaps"><b>Not yet proven on hardware:</b> TrustZone and tickless idle. Both build and are exercised in CI, but neither has been run on a part that actually has the feature - treat them as unfinished rather than as capabilities you can rely on today. Multi-core scheduling is verified on the RP2350, on both its Cortex-M33 and Hazard3 cores, and on the RP2040 (see above). Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
   </div>
 </section>
 
