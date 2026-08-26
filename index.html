@@ -293,7 +293,7 @@
   pre code .kw{color:var(--accent-2);}
   pre code .fn{color:var(--accent);}
 
-  /* DOCS POINTER - doc/installation.md is the authoritative install guide, with doc/stm32cubemx.md and doc/pico-sdk.md per platform; this page only summarizes them */
+  /* DOCS POINTER - doc/installation.md is the authoritative install guide, with doc/stm32.md and doc/raspberry-pi.md per platform; this page only summarizes them */
   .readme-note{
     display:flex; gap:18px; align-items:center; flex-wrap:wrap;
     margin:0 0 40px; padding:20px 22px; border-radius:12px;
@@ -770,7 +770,7 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
       <p class="ol-foot">
         Python 3.8+ and nothing else. Every C edit goes inside a CubeMX <code>USER CODE</code> section, so regeneration keeps it, and your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist. <b>Running it twice is free</b> - it fills in only what is missing, which is also the repair after CubeMX regenerates over the integration. <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out.
         <br><br>
-        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">STM32CubeMX &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
+        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on STM32 &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
       </p>
     </div>
 
@@ -795,7 +795,7 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
 
       <p class="ol-foot">
         Same rules as the STM32 installer, and the offline twin runs the same steps from a local copy of the repository.
-        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Raspberry Pi Pico SDK &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
+        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on Raspberry Pi &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
       </p>
     </div>
 
@@ -815,13 +815,13 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
         <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists.</p>
       </a>
 
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32cubemx.md" target="_blank" rel="noopener">
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md" target="_blank" rel="noopener">
         <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
         <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
         <p>The same steps on a NUCLEO-H503RB, verified end to end. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the CMake block, and what survives regeneration.</p>
       </a>
 
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/pico-sdk.md" target="_blank" rel="noopener">
+      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md" target="_blank" rel="noopener">
         <div class="ic-tag">Raspberry Pi Pico SDK</div>
         <h4>Step by step on RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
         <p>Three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, which supplies the switch vector and the tick - nothing to route yourself. Verified end to end on the RP2350 and the RP2040, including dual-core SMP.</p>
