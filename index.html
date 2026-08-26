@@ -556,28 +556,44 @@ size_t room = os_queue_free_get(&amp;sensor_q);     <span class="cm">/* back-pre
       <div class="feat">
         <h3>Message buffers - variable length</h3>
         <span class="cfg">OS_CONFIG_MSG_ENABLE</span>
-        <p>A queue carries N items of one fixed size. A message buffer carries whole messages whose length varies - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Each receive returns exactly one message, whole and in order.</p>
+        <p>A queue carries N items of one fixed size. A message buffer carries whole messages whose length varies - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Each receive returns exactly one message, whole and in order. Storage comes in the same three kinds as a queue's, since these are the only two objects that own a buffer.</p>
         <pre><code><span class="cm">/* a BYTE budget, not a slot count */</span>
-OS_MSG_DEFINE_STATIC(cmd_buf, 256U);
+OS_MSG_DEFINE_STATIC(cmd_buf, 256U);     <span class="cm">/* no heap     */</span>
+OS_MSG_DEFINE_BUFFER(rx_buf, dma_area);  <span class="cm">/* your RAM    */</span>
+OS_MSG_DEFINE_DYNAMIC(net_buf);          <span class="cm">/* sized later */</span>
 
 os_msg_send(&amp;cmd_buf, frame, frame_len, 10U);
 
 uint8_t rx[64];
 size_t  rx_len;
 os_msg_receive(&amp;cmd_buf, rx, sizeof(rx), &amp;rx_len, OS_WAIT_FOREVER);</code></pre>
+        <p>Each message costs 2 bytes more than its length, for the header that keeps messages apart. Nothing asks you to work that out: <code>os_msg_send</code> adds it and answers <code>OS_ERR_FULL</code> if it does not fit.</p>
       </div>
 
       <div class="feat">
-        <h3>Semaphores and events</h3>
-        <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE · OS_CONFIG_EVENT_ENABLE</span>
-        <p>A counting semaphore for one signal with a maximum; an event group to wait on a set of bits, for all or any of them, clearing what matched on the way out. Both are ISR-safe to signal.</p>
-        <pre><code>os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
-os_semaphore_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
-os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);
+        <h3>Counting semaphores</h3>
+        <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE</span>
+        <p>Initial and maximum count, with the same <code>timeout_ms</code> convention as everything else: try once, wait a while, or wait forever. Giving is ISR-safe.</p>
+        <pre><code>static os_semaphore_t sem;
 
+os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
+os_semaphore_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
+os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Events</h3>
+        <span class="cfg">OS_CONFIG_EVENT_ENABLE</span>
+        <p>Wait on a set of bits, for all of them or any of them, optionally clearing what matched on the way out. The classic fan-in primitive when several producers must each report done.</p>
+        <pre><code>static os_event_t evt;
+uint32_t matched;
+
+os_event_init(&amp;evt);
 os_event_set_bits(&amp;evt, 0x1U);     <span class="cm">/* ISR-safe */</span>
-os_event_wait_bits(&amp;evt, 0x7U, true, true, &amp;matched, 500U);
-                          <span class="cm">/*  all^  clear^ */</span></code></pre>
+os_event_wait_bits(&amp;evt, 0x7U,
+                   true,   <span class="cm">/* wait for all  */</span>
+                   true,   <span class="cm">/* clear on exit */</span>
+                   &amp;matched, 500U);</code></pre>
       </div>
 
       <div class="feat">
@@ -604,14 +620,25 @@ os_timer_submit(&amp;events, &amp;device, code);  <span class="cm">/* queues, ne
       </div>
 
       <div class="feat">
-        <h3>Atomics and the kernel heap</h3>
-        <span class="cfg">OS_CONFIG_ATOMIC_ENABLE · OS_CONFIG_ALLOC_ENABLE</span>
-        <p>A full atomic operation set on a 32-bit word, every one returning the value from <em>before</em> it ran - lock-free where the core has exclusive load/store, a critical section where it does not. The heap is a coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>, taking nothing from the linker heap.</p>
+        <h3>Atomics</h3>
+        <span class="cfg">OS_CONFIG_ATOMIC_ENABLE</span>
+        <p>A full operation set on a 32-bit word, every one returning the value from <em>before</em> it ran. Lock-free where the instruction set has exclusive load/store, a critical section where it does not - same API, same behaviour either way.</p>
         <pre><code>static os_atomic_t counter = OS_ATOMIC_INIT(0);
-os_atomic_inc(&amp;counter);        <span class="cm">/* returns the OLD value */</span>
-os_atomic_cas(&amp;counter, 10, 20);
 
-void *p = os_mem_alloc(64U);
+os_atomic_inc(&amp;counter);        <span class="cm">/* returns the OLD value */</span>
+os_atomic_add(&amp;counter, 5);
+os_atomic_cas(&amp;counter, 10, 20);
+os_atomic_set_bit(&amp;flags, 3U);</code></pre>
+      </div>
+
+      <div class="feat">
+        <h3>Kernel heap</h3>
+        <span class="cfg">OS_CONFIG_ALLOC_ENABLE</span>
+        <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>. Nothing is taken from the linker heap and the kernel never calls <code>malloc</code>, so what a build costs stays visible in the map file. It is also what the dynamic queue and message buffer draw on.</p>
+        <pre><code>void *p = os_mem_alloc(64U);
+os_mem_free(p);
+
+size_t free_now   = os_mem_free_get();
 size_t worst_ever = os_mem_watermark_get();</code></pre>
       </div>
 
