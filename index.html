@@ -776,53 +776,16 @@ void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
     <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV on Cortex-M - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract.</p>
 
     <div class="oneliner">
-      <h3>One command, on a CubeMX CMake project</h3>
-      <p class="ol-sub">Run it from the root of your project - the directory holding <code>CMakeLists.txt</code> and the <code>.ioc</code>. It fetches the kernel, copies the three application-owned files, adds the CMake block, routes the tick and wires up <code>os_init()</code> / <code>os_start()</code>, printing the exact diff first and asking before it writes anything.</p>
+      <h3>One command, on STM32CubeMX or the Raspberry Pi Pico SDK</h3>
+      <p class="ol-sub">Run one installer from the root of your project. It fetches the kernel, copies the application-owned files, adds the CMake block, routes the tick where that is needed and wires up <code>os_init()</code> / <code>os_start()</code> - printing the exact diff first and asking before it writes anything. Python 3.8+ and nothing else, no <code>pip install</code>, and nothing left behind in your project.</p>
 
-      <div class="ol-cmd">
-        <span class="ol-os">Windows &middot; PowerShell</span>
-<pre><code>irm https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32_online.py | python -</code></pre>
-      </div>
-
-      <div class="ol-cmd">
-        <span class="ol-os">Linux &amp; macOS &middot; bash, zsh</span>
-<pre><code>curl -fsSL https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_stm32_online.py | python3 -</code></pre>
-      </div>
-
-      <div class="ol-cmd">
-        <span class="ol-os">No internet on the machine</span>
-<pre><code>python3 AhuraRTOS/tools/install_stm32_offline.py</code></pre>
-      </div>
+      <p class="ol-sub">On the Pico it detects the board and picks the SoC package for it - <code>rp2040</code>, <code>rp235x_arm</code> or <code>rp235x_riscv</code> - so there is no vector or tick step to do by hand. On CubeMX every C edit goes inside a <code>USER CODE</code> section, so regeneration keeps it. <b>Running either twice is free</b>: it fills in only what is missing, which is also the repair after CubeMX regenerates over the integration. Each has an offline twin that reads a copy already on disk and imports no networking module at all.</p>
 
       <p class="ol-foot">
-        Python 3.8+ and nothing else. Every C edit goes inside a CubeMX <code>USER CODE</code> section, so regeneration keeps it, and your <code>os_config.h</code>, <code>os_cb.c</code> and <code>os_main.c</code> are never overwritten once they exist. <b>Running it twice is free</b> - it fills in only what is missing, which is also the repair after CubeMX regenerates over the integration. <code>--dry-run</code> shows the diff and stops, <code>--uninstall</code> takes it all back out.
-        <br><br>
-        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on STM32 &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
-      </p>
-    </div>
-
-    <div class="oneliner">
-      <h3>One command, on a Raspberry Pi Pico SDK project</h3>
-      <p class="ol-sub">Run it from the root of your project - the directory holding the top-level <code>CMakeLists.txt</code> and <code>pico_sdk_import.cmake</code>. It detects the board, selects the matching SoC package (<code>rp2040</code>, <code>rp235x_arm</code> or <code>rp235x_riscv</code>), copies the application-owned files and adds the CMake block. There is no tick or PendSV step - the package supplies both vectors.</p>
-
-      <div class="ol-cmd">
-        <span class="ol-os">Windows &middot; PowerShell</span>
-<pre><code>irm https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_rpi_online.py | python -</code></pre>
-      </div>
-
-      <div class="ol-cmd">
-        <span class="ol-os">Linux &amp; macOS &middot; bash, zsh</span>
-<pre><code>curl -fsSL https://raw.githubusercontent.com/AhuraRTOS/AhuraRTOS/main/tools/install_rpi_online.py | python3 -</code></pre>
-      </div>
-
-      <div class="ol-cmd">
-        <span class="ol-os">No internet on the machine</span>
-<pre><code>python3 AhuraRTOS/tools/install_rpi_offline.py</code></pre>
-      </div>
-
-      <p class="ol-foot">
-        Same rules as the STM32 installer, and the offline twin runs the same steps from a local copy of the repository.
-        Full details in <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on Raspberry Pi &rarr; Automatic</a>, or <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#offline---no-internet-on-the-machine" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">Offline</a> for the no-network route.
+        The exact commands live with the kernel, in the pages below, so there is one copy of them rather than two that drift apart:
+        <b><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on STM32</a></b> ·
+        <b><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on Raspberry Pi</a></b> ·
+        <b><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md#pick-your-chip" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">every chip, all three routes</a></b>
       </p>
     </div>
 
