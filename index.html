@@ -66,876 +66,603 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root{
-    --bg: #0a0d12;
-    --bg-alt: #0f141b;
-    --panel: #121820;
-    --panel-border: #1e2730;
-    --text: #e7ecf1;
-    --text-dim: #93a1b0;
-    --text-faint: #5b6b7a;
-    --accent: #f0a828;
-    --accent-soft: rgba(240,168,40,0.12);
-    --accent-2: #4fd1c5;
-    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --sans: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-    --radius: 14px;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(240,168,40,0.10), transparent 60%),
-      radial-gradient(1000px 500px at 100% 0%, rgba(79,209,197,0.08), transparent 55%),
-      var(--bg);
-    color:var(--text);
-    font-family:var(--sans);
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:inherit;}
-  .wrap{max-width:1120px; margin:0 auto; padding:0 24px;}
+/* ===========================================================================
+   AhuraRTOS - the existing palette and faces, restructured.
+   Kept: #0a0d12 ground, #f0a828 amber, #4fd1c5 teal, Space Grotesk +
+   JetBrains Mono, 14px radius. Changed: hierarchy, rhythm, surfaces.
+   The two accents now have jobs - amber leads and acts, teal is data.
+   Committed dark theme, as the site already is; every colour painted.
+   ======================================================================== */
+:root{
+  --bg:#0a0d12;
+  --bg-2:#0d1219;
+  --panel:#121820;
+  --panel-2:#161d27;
+  --line:#1e2730;
+  --line-soft:#182029;
 
-  a:focus-visible, button:focus-visible{
-    outline:2px solid var(--accent); outline-offset:3px; border-radius:4px;
-  }
-  @media (prefers-reduced-motion: reduce){
-    html{scroll-behavior:auto;}
-    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
-  }
+  --text:#e7ecf1;
+  --dim:#93a1b0;
+  --faint:#5b6b7a;
 
-  /* NAV */
-  header.nav{
-    position:sticky; top:0; z-index:50;
-    backdrop-filter:blur(10px);
-    background:rgba(10,13,18,0.75);
-    border-bottom:1px solid var(--panel-border);
-  }
-  .nav-inner{display:flex; align-items:center; justify-content:space-between; padding:14px 24px;}
-  .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:0.2px;}
-  .brand .flame{color:var(--accent); font-size:20px;}
-  /* The mark degrades to the ⚡ text glyph if logo.jpg is not present (onerror below). */
-  .brand-mark{width:30px; height:30px; border-radius:50%; display:block;}
-  .hero-mark{
-    width:132px; height:132px; border-radius:50%; display:block; margin:0 auto 26px;
-    box-shadow:0 10px 40px rgba(0,0,0,0.55), 0 0 0 1px var(--panel-border);
-  }
-  @media (max-width:600px){ .hero-mark{width:104px; height:104px;} }
-  nav.links{display:flex; gap:28px; font-size:14px; color:var(--text-dim);}
-  nav.links a{text-decoration:none; transition:color .15s;}
-  nav.links a:hover{color:var(--text);}
-  .nav-cta{display:flex; gap:10px;}
-  .btn{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:9px 16px; border-radius:8px; font-size:14px; font-weight:600;
-    text-decoration:none; border:1px solid var(--panel-border);
-    transition:transform .15s ease, border-color .15s ease, background .15s ease;
-    white-space:nowrap;
-  }
-  .btn:hover{transform:translateY(-1px);}
-  .btn-primary{background:var(--accent); color:#1a1305; border-color:var(--accent);}
-  .btn-primary:hover{background:#ffb93f;}
-  .btn-ghost{background:transparent; color:var(--text);}
-  .btn-ghost:hover{border-color:var(--accent);}
+  --amber:#f0a828;
+  --amber-soft:rgba(240,168,40,.10);
+  --teal:#4fd1c5;
+  --teal-soft:rgba(79,209,197,.10);
 
-  @media (max-width:820px){ nav.links{display:none;} }
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --logo:url(logo.jpg);
+  --r:14px;
+  --r-sm:9px;
 
-  /* HERO */
-  .hero{padding:96px 0 72px; text-align:center; position:relative;}
-  .status-pill{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:6px 14px; border-radius:999px;
-    background:var(--accent-soft); border:1px solid rgba(240,168,40,0.35);
-    color:#f3c169; font-size:13px; font-weight:600; margin-bottom:28px;
-  }
-  .status-pill .dot{width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
-  h1.title{
-    font-size:clamp(40px,7vw,76px); font-weight:700; margin:0 0 18px; letter-spacing:-1.5px; line-height:1.05;
-    text-wrap:balance;
-  }
-  h1.title .grad{
-    background:linear-gradient(120deg, var(--accent), var(--accent-2));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-  .subtitle{
-    max-width:660px; margin:0 auto 40px; color:var(--text-dim); font-size:19px;
-  }
-  .subtitle b{color:var(--text); font-weight:600;}
-  .hero-ctas{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:22px;}
-  .btn-lg{padding:13px 26px; font-size:15px; border-radius:10px;}
-  .hero-secondary{
-    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
-    font-family:var(--mono); font-size:12.5px; color:var(--text-faint); margin-bottom:56px;
-  }
-  .hero-secondary a{text-decoration:none; padding:2px 0; border-bottom:1px solid transparent; transition:color .15s, border-color .15s;}
-  .hero-secondary a:hover{color:var(--text-dim); border-color:var(--panel-border);}
-  .hero-secondary a:not(:last-child)::after{content:"·"; margin-left:10px; color:var(--panel-border);}
+  --s:clamp(72px,9vw,124px);      /* section rhythm */
+  --gut:clamp(20px,4vw,32px);
+}
 
-  .mcu-strip{
-    display:flex; flex-wrap:wrap; justify-content:center; gap:10px; max-width:760px; margin:0 auto;
-  }
-  .mcu-chip{
-    font-family:var(--mono); font-size:12.5px; color:var(--text-dim);
-    border:1px solid var(--panel-border); background:var(--panel);
-    padding:6px 12px; border-radius:7px;
-  }
-  .mcu-chip.planned{
-    color:var(--text-faint); background:transparent; border-style:dashed;
-  }
-  .mcu-caption{
-    font-family:var(--mono); font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase;
-    color:var(--text-faint); margin:0 0 12px;
-  }
-  .mcu-caption + .mcu-strip + .mcu-caption{margin-top:24px;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--sans); font-size:16.5px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{animation-duration:.001ms !important; transition-duration:.001ms !important}
+}
+a{color:inherit; text-decoration:none}
+a:focus-visible,button:focus-visible{outline:2px solid var(--amber); outline-offset:3px; border-radius:4px}
+img{max-width:100%; display:block}
+.bg-mark{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:var(--logo);
+  background-repeat:no-repeat; background-position:center center;
+  background-size:min(76vmin,720px);
+  opacity:.08;
+  -webkit-mask-image:radial-gradient(closest-side,#000 42%,transparent 84%);
+          mask-image:radial-gradient(closest-side,#000 42%,transparent 84%);
+}
+/* everything the page draws sits above the watermark */
+.nav,.hero,.chips,.section,footer{position:relative; z-index:1}
+.logo{background:var(--logo) center/cover no-repeat; border-radius:50%; display:block; flex:none}
 
-  /* SECTION HEADERS */
-  .section{padding:88px 0;}
-  .section-alt{background:linear-gradient(180deg, transparent, var(--bg-alt) 8%, var(--bg-alt) 92%, transparent);}
-  .eyebrow{
-    font-family:var(--mono); text-transform:uppercase; letter-spacing:2px; font-size:12px;
-    color:var(--accent-2); font-weight:600; margin-bottom:12px;
-  }
-  h2.h2{font-size:clamp(28px,4vw,38px); font-weight:700; margin:0 0 14px; letter-spacing:-0.5px; text-wrap:balance;}
-  .lede{color:var(--text-dim); max-width:640px; font-size:16px; margin-bottom:48px;}
+.wrap{max-width:1160px; margin-inline:auto; padding-inline:var(--gut)}
 
-  /* FEATURE GRID */
-  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
-  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
-  @media (max-width:600px){.grid{grid-template-columns:1fr;}}
-  .card{
-    background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
-    padding:26px; transition:border-color .2s ease, transform .2s ease;
-  }
-  .card:hover{border-color:rgba(240,168,40,0.4); transform:translateY(-3px);}
-  .card .icon{
-    width:38px; height:38px; border-radius:9px; background:var(--accent-soft);
-    display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:18px;
-    color:var(--accent);
-  }
-  .card .icon svg{width:19px; height:19px;}
-  .card h3{font-size:16.5px; margin:0 0 8px; font-weight:600;}
-  .card p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.65;}
+/* --- shared type ---------------------------------------------------------- */
+.eyebrow{
+  font-family:var(--mono); font-size:11.5px; font-weight:500; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--amber); margin:0 0 16px;
+}
+h1,h2,h3{margin:0; font-weight:600; color:#fff; letter-spacing:-.02em; text-wrap:balance}
+h1{font-size:clamp(38px,5.4vw,62px); line-height:1.06; font-weight:700}
+h2{font-size:clamp(26px,3.2vw,38px); line-height:1.15}
+h3{font-size:17.5px; line-height:1.35; letter-spacing:-.01em}
+p{margin:0; text-wrap:pretty}
+.lede{color:var(--dim); font-size:17px}
+code{font-family:var(--mono); font-size:.88em; color:var(--teal)}
 
-  /* FEATURE REFERENCE */
-  .feat-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
-  @media (max-width:900px){.feat-grid{grid-template-columns:1fr;}}
-  .feat{
-    background:var(--panel); border:1px solid var(--panel-border);
-    border-radius:var(--radius); padding:24px; display:flex; flex-direction:column;
-  }
-  .feat h3{margin:0 0 10px; font-size:16.5px; font-weight:600;}
-  .cfg{
-    font-family:var(--mono); font-size:11px; color:var(--accent);
-    background:var(--accent-soft); border:1px solid rgba(240,168,40,0.25);
-    padding:3px 8px; border-radius:6px; display:inline-block; margin-bottom:12px;
-  }
-  .cfg.always{color:var(--accent-2); background:rgba(79,209,197,0.10); border-color:rgba(79,209,197,0.28);}
-  /* Deliberately a different colour from .cfg: this is a caution, not a config switch. */
-  .untested{
-    font-family:var(--mono); font-size:11px; letter-spacing:0.2px;
-    color:#ffb09b; background:rgba(255,120,90,0.10); border:1px solid rgba(255,120,90,0.34);
-    padding:3px 8px; border-radius:6px; display:inline-block; margin:0 0 12px;
-  }
-  .tested{
-    font-family:var(--mono); font-size:11px; letter-spacing:0.2px;
-    color:#8fe3b4; background:rgba(80,200,140,0.10); border:1px solid rgba(80,200,140,0.34);
-    padding:3px 8px; border-radius:6px; display:inline-block; margin:0 0 12px;
-  }
-  .card .untested{margin:0 0 10px;}
-  .card .tested{margin:0 0 10px;}
-  .feat p{margin:0 0 14px; color:var(--text-dim); font-size:14px; line-height:1.65;}
-  .feat pre{margin-top:auto; font-size:12.5px; padding:14px 16px;}
-  .feat pre code{font-size:12.5px;}
+/* --- surfaces: a hairline plus one soft top highlight, not a flat box ------ */
+.card{
+  background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 62%);
+  border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
 
-  /* HOW IT WORKS */
-  .flow{display:flex; flex-direction:column; gap:2px;}
-  .flow-item{display:flex; gap:24px; align-items:flex-start; padding:20px 0; border-bottom:1px solid var(--panel-border);}
-  .flow-item:last-child{border-bottom:none;}
-  .flow-key{
-    flex:0 0 190px; font-family:var(--mono); font-size:12.5px; color:var(--accent-2);
-    padding-top:2px; letter-spacing:0.3px;
-  }
-  .flow-val{color:var(--text-dim); font-size:14.5px; line-height:1.7; min-width:0;}
-  .flow-val b{color:var(--text); font-weight:600;}
-  .flow-val code{font-size:13px; color:#c9d6e3;}
-  @media (max-width:700px){
-    .flow-item{flex-direction:column; gap:8px;}
-    .flow-key{flex:none;}
-  }
+/* --- buttons -------------------------------------------------------------- */
+.btn{
+  display:inline-flex; align-items:center; gap:9px;
+  font-family:var(--mono); font-size:13.5px; font-weight:500; letter-spacing:.01em;
+  padding:12px 22px; border-radius:var(--r-sm); border:1px solid var(--amber);
+  background:var(--amber); color:#140d02; transition:background .15s,border-color .15s,color .15s;
+}
+.btn:hover{background:#ffbe45; border-color:#ffbe45}
+.btn.ghost{background:transparent; color:var(--text); border-color:var(--line)}
+.btn.ghost:hover{background:var(--panel-2); border-color:#2b3846; color:#fff}
 
-  /* GETTING STARTED - the docs own the procedure; these only route to it */
-  .install-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px;}
-  @media (max-width:860px){.install-grid{grid-template-columns:1fr;}}
-  .install-card{
-    display:block; text-decoration:none;
-    background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius);
-    padding:26px; transition:border-color .2s ease, transform .2s ease;
-  }
-  .install-card:hover{border-color:rgba(240,168,40,0.45); transform:translateY(-3px);}
-  .install-card .ic-tag{
-    font-family:var(--mono); font-size:11.5px; letter-spacing:1.4px; text-transform:uppercase;
-    color:var(--accent-2); margin-bottom:12px;
-  }
-  .install-card h4{margin:0 0 10px; font-size:17px; font-weight:600; color:var(--text);}
-  .install-card h4 .arw{color:var(--accent); transition:transform .2s ease; display:inline-block;}
-  .install-card:hover h4 .arw{transform:translateX(4px);}
-  .install-card p{margin:0; color:var(--text-dim); font-size:14px; line-height:1.7;}
-  .install-card code{font-size:12.5px;}
-  pre{
-    background:#0a0e13; border:1px solid var(--panel-border); border-radius:10px;
-    padding:16px 18px; overflow-x:auto; margin:0;
-  }
-  code{font-family:var(--mono); font-size:13.5px; color:#c9d6e3;}
-  pre code .cm{color:var(--text-faint);}
-  pre code .kw{color:var(--accent-2);}
-  pre code .fn{color:var(--accent);}
+/* ===========================================================================
+   NAV
+   ======================================================================== */
+.nav{position:sticky; top:0; z-index:50; background:rgba(10,13,18,.78); backdrop-filter:blur(12px); border-bottom:1px solid var(--line)}
+.nav-in{display:flex; align-items:center; justify-content:space-between; gap:24px; padding-block:12px}
+.brand{display:flex; align-items:center; gap:11px}
+.brand img{width:32px; height:32px; border-radius:50%}
+.brand b{font-size:18px; font-weight:700; letter-spacing:-.01em}
+.nav-links{display:flex; gap:26px; font-size:14.5px; color:var(--dim)}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{display:flex; align-items:center; gap:12px}
 
-  /* DOCS POINTER - doc/installation.md is the authoritative install guide, with doc/stm32.md and doc/raspberry-pi.md per platform; this page only summarizes them */
-  .readme-note{
-    display:flex; gap:18px; align-items:center; flex-wrap:wrap;
-    margin:0 0 40px; padding:20px 22px; border-radius:12px;
-    background:var(--accent-soft); border:1px solid rgba(240,168,40,0.28);
-  }
-  .readme-note .rn-icon{font-size:22px; line-height:1;}
-  .readme-note .rn-body{flex:1; min-width:260px; color:#e7d3a3; font-size:14.5px; line-height:1.65;}
-  .readme-note .rn-body b{color:var(--accent); font-weight:600;}
-  .readme-note .rn-body code{font-size:13px;}
-  .readme-note .btn{flex:0 0 auto;}
+/* ===========================================================================
+   HERO - asymmetric. The strongest evidence sits in it, not three screens down.
+   ======================================================================== */
+.hero{
+  position:relative; padding-block:clamp(48px,6vw,84px) clamp(40px,5vw,68px);
+  border-bottom:1px solid var(--line); overflow:hidden;
+}
+.hero::before{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(760px 420px at 12% -20%, var(--amber-soft), transparent 62%),
+    radial-gradient(680px 380px at 92% -10%, var(--teal-soft), transparent 58%);
+}
+.hero-in{position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:clamp(32px,4.5vw,64px); align-items:center}
+.hero-logo{width:112px; height:112px; border-radius:50%; margin-bottom:24px; box-shadow:0 0 0 1px var(--line),0 10px 34px rgba(0,0,0,.5)}
+.hero h1 span{color:var(--teal)}
+.hero .lede{margin:20px 0 30px; max-width:52ch}
+.hero-acts{display:flex; gap:12px; flex-wrap:wrap}
+.hero-note{margin-top:22px; font-family:var(--mono); font-size:12.5px; color:var(--faint)}
 
-  /* ONE-COMMAND INSTALL - tools/install_stm32_online.py and tools/install_rpi_online.py (each with an _offline twin), for CubeMX CMake and Pico SDK projects */
-  .oneliner{
-    margin:0 0 40px; padding:26px 28px; border-radius:12px;
-    background:linear-gradient(180deg, rgba(240,168,40,0.07), rgba(240,168,40,0.015));
-    border:1px solid rgba(240,168,40,0.30);
-  }
-  .oneliner h3{margin:0 0 8px; font-size:20px; font-weight:600; color:var(--text);}
-  .oneliner .ol-sub{margin:0 0 22px; color:var(--text-dim); font-size:14.5px; line-height:1.7;}
-  .oneliner .ol-os{
-    display:block; margin:0 0 9px; font-size:11.5px; letter-spacing:0.1em;
-    text-transform:uppercase; color:var(--accent); font-weight:600;
-  }
-  .oneliner .ol-cmd + .ol-cmd{margin-top:20px;}
-  .oneliner pre{background:#080b10;}
-  .oneliner pre code{font-size:12.5px;}
-  .oneliner .ol-foot{margin:22px 0 0; color:var(--text-dim); font-size:14px; line-height:1.75;}
-  .oneliner .ol-foot code{font-size:12.5px;}
-  .oneliner .ol-foot b{color:var(--text); font-weight:600;}
+/* the console panel: real self-test output */
+.console{padding:0; overflow:hidden}
+.console-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:11px 16px; border-bottom:1px solid var(--line);
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint);
+}
+.console-bar .live{display:flex; align-items:center; gap:7px; color:var(--teal)}
+.blip{width:6px; height:6px; border-radius:50%; background:var(--teal)}
+@media (prefers-reduced-motion:no-preference){.blip{animation:b 2s ease-in-out infinite}}
+@keyframes b{0%,100%{opacity:1}50%{opacity:.3}}
+.console-body{padding:16px; font-family:var(--mono); font-size:12.5px; line-height:1.9; overflow-x:auto}
+.console-body table{width:100%; border-collapse:collapse; min-width:330px}
+.console-body td{padding:1px 0; white-space:nowrap}
+.console-body td.op{color:var(--dim); padding-right:18px}
+.console-body td.n{text-align:right; color:var(--text); font-variant-numeric:tabular-nums; padding-right:14px}
+.console-body td.t{text-align:right; color:var(--teal); font-variant-numeric:tabular-nums}
+.console-foot{
+  border-top:1px solid var(--line); padding:11px 16px;
+  font-family:var(--mono); font-size:12.5px; color:var(--teal); background:rgba(79,209,197,.05);
+}
+.console-foot b{color:#fff; font-weight:600}
 
-  /* ARCHITECTURE / TREE */
-  .two-col{display:grid; grid-template-columns:1.1fr 1fr; gap:40px; align-items:start;}
-  @media (max-width:860px){.two-col{grid-template-columns:1fr;}}
-  .tree-box{
-    background:#0a0e13; border:1px solid var(--panel-border); border-radius:12px; padding:22px 24px;
-  }
-  .tree-box pre{border:none; background:none; padding:0;}
+/* ===========================================================================
+   CHIPS - the cores, one thin band
+   ======================================================================== */
+.chips{border-bottom:1px solid var(--line); padding-block:22px}
+.chips-in{display:flex; align-items:center; gap:14px 22px; flex-wrap:wrap}
+.chips-lab{font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint); white-space:nowrap}
+.chip{
+  font-family:var(--mono); font-size:12.5px; color:var(--dim);
+  border:1px solid var(--line); border-radius:99px; padding:5px 13px;
+}
+.chip.rv{border-color:#28414a; color:var(--teal)}
 
-  /* ROADMAP */
-  .roadmap{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
-  @media (max-width:860px){.roadmap{grid-template-columns:1fr;}}
-  .phase{
-    background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius); padding:26px; position:relative;
-  }
-  .phase.active{border-color:rgba(240,168,40,0.5); box-shadow:0 0 0 1px rgba(240,168,40,0.15) inset;}
-  .phase-tag{
-    font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:1px;
-    color:var(--text-faint); margin-bottom:10px;
-  }
-  .phase.active .phase-tag{color:var(--accent);}
-  .phase h3{margin:0 0 10px; font-size:17px;}
-  .phase p{margin:0; color:var(--text-dim); font-size:14px;}
-  .gaps{margin-top:24px; padding:18px 20px; border-radius:12px; background:var(--accent-soft); border:1px solid rgba(240,168,40,0.25); font-size:14px; color:#e7d3a3;}
-  .gaps b{color:var(--accent);}
+/* ===========================================================================
+   BENTO - unequal weights, because the claims are not equally important
+   ======================================================================== */
+.section{padding-block:var(--s)}
+.section.alt{background:rgba(13,18,25,.72); border-block:1px solid var(--line)}
+.sec-head{max-width:56ch; margin-bottom:38px}
+.sec-head p{color:var(--dim); margin-top:14px}
 
-  /* FOOTER / CTA */
-  .cta-band{
-    text-align:center; padding:90px 24px; border-top:1px solid var(--panel-border);
-  }
-  .cta-band h2{font-size:clamp(26px,4vw,36px); margin:0 0 16px; text-wrap:balance;}
-  .cta-band p{color:var(--text-dim); margin:0 0 32px;}
+.bento{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px}
+.bento .card{padding:26px}
+.bento .lg{grid-column:span 2}
+.bento .full{grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:30px; align-items:center}
+.bento h3{margin-bottom:10px}
+.bento p{color:var(--dim); font-size:15px; line-height:1.62}
+.bento .mini{
+  margin-top:18px; font-family:var(--mono); font-size:12.5px; line-height:1.85;
+  background:#0b1017; border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:13px 15px; color:var(--dim); overflow-x:auto;
+}
+.bento .mini .k{color:var(--amber)}
+.bento .mini .v{color:var(--teal)}
+.bento .mini .c{color:var(--faint)}
+.stat{font-family:var(--mono); font-size:31px; font-weight:600; color:var(--teal); letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.stat small{display:block; font-family:var(--sans); font-size:13px; font-weight:400; color:var(--faint); letter-spacing:0; margin-top:6px}
 
-  footer{border-top:1px solid var(--panel-border); padding:36px 0 48px;}
-  .footer-inner{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;}
-  .footer-inner .fbrand{font-weight:700;}
-  .footer-links{display:flex; gap:22px; font-size:13.5px; color:var(--text-dim);}
-  .footer-links a{text-decoration:none;}
-  .footer-links a:hover{color:var(--text);}
-  .foot-note{color:var(--text-faint); font-size:13px; margin-top:14px;}
+
+/* ===========================================================================
+   FEATURES - every row carries the define that removes it, so the list is also
+   the evidence for the compile-time-switch claim made above it.
+   ======================================================================== */
+.feat-list{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 clamp(30px,4vw,56px)}
+.feat{
+  display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 18px;
+  align-items:baseline; padding:16px 0; border-top:1px solid var(--line);
+}
+.feat h3{font-size:16px; margin:0}
+.feat .sw{
+  font-family:var(--mono); font-size:11.5px; color:var(--teal);
+  white-space:nowrap; justify-self:end;
+}
+.feat .sw.always{color:var(--faint)}
+.feat p{grid-column:1/-1; margin:0; color:var(--dim); font-size:14px; line-height:1.55}
+@media (max-width:820px){
+  .feat-list{grid-template-columns:minmax(0,1fr)}
+  .feat{grid-template-columns:minmax(0,1fr)}
+  .feat .sw{justify-self:start}
+}
+
+/* ===========================================================================
+   PROOF
+   ======================================================================== */
+.proof{display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:clamp(30px,4vw,60px); align-items:start}
+.tbl{overflow-x:auto}
+table.data{width:100%; border-collapse:collapse; font-size:14.5px; min-width:420px}
+table.data th{
+  text-align:left; font-family:var(--mono); font-weight:500; font-size:11px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--faint);
+  padding:0 16px 11px 0; border-bottom:1px solid var(--line);
+}
+table.data td{padding:12px 16px 12px 0; border-bottom:1px solid var(--line-soft); vertical-align:baseline}
+table.data td:last-child,table.data th:last-child{padding-right:0; text-align:right}
+table.data .core{color:var(--dim); font-size:13.5px}
+.pass{font-family:var(--mono); font-size:13px; color:var(--teal); font-variant-numeric:tabular-nums; white-space:nowrap}
+
+/* ===========================================================================
+   LAYERS
+   ======================================================================== */
+.layers{display:flex; flex-direction:column; gap:10px}
+.layer{
+  display:grid; grid-template-columns:150px minmax(0,1fr); gap:24px; align-items:baseline;
+  padding:20px 24px;
+}
+.layer code{font-size:14.5px; color:var(--amber); font-weight:500}
+.layer p{color:var(--dim); font-size:15px}
+
+/* ===========================================================================
+   INSTALL + FOOTER
+   ======================================================================== */
+.install{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:clamp(28px,4vw,56px); align-items:center}
+.cmd{display:block; text-decoration:none;
+  font-family:var(--mono); font-size:13px; background:#0b1017; border:1px solid var(--line);
+  border-radius:var(--r-sm); padding:15px 17px; color:var(--teal); overflow-x:auto; white-space:nowrap;
+}
+.cmd .p{color:var(--faint)}
+.cmd + .cmd{margin-top:10px}
+
+footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px; color:var(--dim)}
+.foot-top{display:flex; flex-wrap:wrap; gap:18px 30px; align-items:center; justify-content:space-between}
+.foot-links{display:flex; gap:22px; flex-wrap:wrap; color:var(--dim)}
+.foot-links a:hover{color:var(--text)}
+.status{
+  margin-top:26px; padding:16px 18px; border-radius:var(--r-sm);
+  background:var(--amber-soft); border:1px solid #33291a; color:var(--dim);
+  font-size:13.5px; max-width:78ch; line-height:1.7;
+}
+.status b{color:var(--text); font-weight:600}
+
+/* --- responsive ----------------------------------------------------------- */
+@media (max-width:900px){
+  .hero-in,.bento .full,.proof,.install{grid-template-columns:minmax(0,1fr)}
+  .bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bento .lg{grid-column:span 2}
+  .nav-links{display:none}
+}
+@media (max-width:560px){
+  .bento{grid-template-columns:minmax(0,1fr)}
+  .bento .lg{grid-column:span 1}
+  .layer{grid-template-columns:minmax(0,1fr); gap:7px}
+}
 </style>
 </head>
+
 <body>
 
+<div class="bg-mark" aria-hidden="true"></div>
+
 <header class="nav">
-  <div class="nav-inner">
-    <div class="brand">
-      <img class="brand-mark" src="logo.jpg" alt=""
-           onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
-      <span class="flame" style="display:none">⚡</span>
-      AhuraRTOS
-    </div>
-    <nav class="links">
-      <a href="#highlights">Highlights</a>
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <span class="logo" style="width:42px;height:42px" role="img" aria-label="AhuraRTOS"></span>
+      <b>AhuraRTOS</b>
+    </a>
+    <nav class="nav-links">
+      <a href="#design">Kernel</a>
       <a href="#features">Features</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#getting-started">Install</a>
-      <a href="#verify">Verify</a>
-      <a href="#roadmap">Roadmap</a>
+      <a href="#proof">Proof</a>
+      <a href="#layers">Architecture</a>
+      <a href="#install">Install</a>
     </nav>
-    <div class="nav-cta">
-      <a class="btn btn-ghost" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Get Started</a>
-    </div>
+    <div class="nav-cta"><a class="btn ghost" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a></div>
   </div>
 </header>
 
-<section class="hero">
-  <div class="wrap">
-    <img class="hero-mark" src="logo.jpg" alt="AhuraRTOS logo"
-         onerror="this.style.display='none'">
-    <div class="status-pill"><span class="dot"></span> Early &amp; under active development - Cortex-M functional today</div>
-    <h1 class="title">The <span class="grad">Prince</span> of RTOS</h1>
-    <p class="subtitle">
-      <b>AhuraRTOS</b> is a small, <b>multi-platform</b> preemptive real-time operating system -
-      an architecture-independent core behind a thin port layer, a single public header, and an explicit
-      application/kernel boundary. No editable kernel files. No hidden config.
-    </p>
-    <div class="hero-ctas">
-      <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">⭐ View on GitHub</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Get Started</a>
+<!-- ============================= HERO ============================= -->
+<section class="hero" id="top">
+  <div class="wrap hero-in">
+    <div>
+      <span class="logo hero-logo" aria-hidden="true"></span>
+      <p class="eyebrow">Preemptive RTOS &middot; C11 &middot; GPL-3.0</p>
+      <h1>The Wise Lord<br>of <span>Small Machines</span></h1>
+      <p class="lede">One public header. Every feature a compile-time switch that
+        removes code, RAM and API surface. Not one dynamic allocation inside the
+        kernel. What a build costs is settled before it runs.</p>
+      <div class="hero-acts">
+        <a class="btn" href="#install">Install in one command</a>
+        <a class="btn ghost" href="#proof">See the measurements</a>
+      </div>
+      <p class="hero-note">Cortex-M0 &rarr; M85 &nbsp;&middot;&nbsp; RV32 Hazard3 &nbsp;&middot;&nbsp; dual-core SMP</p>
     </div>
-    <div class="hero-secondary">
-      <a href="#features">Features</a>
-      <a href="https://github.com/AhuraRTOS/AhuraRTOS/tree/main/kernel" target="_blank" rel="noopener">Kernel Source</a>
-      <a href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
-      <a href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
-    </div>
-    <p class="mcu-caption">Ports available today - ARM Cortex-M and RISC-V</p>
-    <div class="mcu-strip">
-      <span class="mcu-chip">Cortex-M0</span>
-      <span class="mcu-chip">M0+</span>
-      <span class="mcu-chip">M3</span>
-      <span class="mcu-chip">M4</span>
-      <span class="mcu-chip">M7</span>
-      <span class="mcu-chip">M23</span>
-      <span class="mcu-chip">M33</span>
-      <span class="mcu-chip">M35P</span>
-      <span class="mcu-chip">M52</span>
-      <span class="mcu-chip">M55</span>
-      <span class="mcu-chip">M85</span>
-      <span class="mcu-chip">RV32 / Hazard3</span>
-    </div>
-    <p class="mcu-caption">Planned - same port interface, no core changes</p>
-    <div class="mcu-strip">
-      <span class="mcu-chip planned">Xtensa / ESP32</span>
-      <span class="mcu-chip planned">more to come</span>
+
+    <div class="card console">
+      <div class="console-bar">
+        <span>self-test &middot; rp2350 &middot; 150 MHz</span>
+        <span class="live"><span class="blip"></span>on silicon</span>
+      </div>
+      <div class="console-body">
+        <table>
+          <tr><td class="op">context switch, task to task</td><td class="n">486</td><td class="t">3.24 &micro;s</td></tr>
+          <tr><td class="op">mutex lock + unlock</td><td class="n">560</td><td class="t">3.73 &micro;s</td></tr>
+          <tr><td class="op">queue send + receive</td><td class="n">552</td><td class="t">3.68 &micro;s</td></tr>
+          <tr><td class="op">semaphore give + take</td><td class="n">312</td><td class="t">2.08 &micro;s</td></tr>
+          <tr><td class="op">os_tick_get</td><td class="n">10</td><td class="t">0.07 &micro;s</td></tr>
+        </table>
+      </div>
+      <div class="console-foot">RESULT: <b>670 passed</b>, 0 failed. Every enabled feature.</div>
     </div>
   </div>
 </section>
 
-<section class="section section-alt" id="highlights">
-  <div class="wrap">
-    <div class="eyebrow">Why AhuraRTOS</div>
-    <h2 class="h2">Built for real embedded work</h2>
-    <p class="lede">A functional, self-testing kernel whose core knows nothing about the CPU it runs on. Every Cortex-M from M0 to M85 works today; further architectures plug into the same port interface.</p>
-    <div class="grid">
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div>
-        <h3>Preemptive, priority-based scheduler</h3>
-        <p>O(1) list-based scheduling with one FIFO ready list per priority, a ready bitmap for O(1) next-task lookup, and round-robin among equal priorities over a configurable time slice. A scheduler lock defers preemption without masking a single interrupt.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg></div>
-        <h3>Multi-platform by design</h3>
-        <p>The core is portable C. A port supplies only what the CPU decides - context switch, tick, critical section, atomics, low-power hooks - so a new architecture is a new port, not a kernel change. Two instruction sets ship today: ARM Cortex-M, ARMv6-M through ARMv8.1-M, M0 to M85, in three shared port files; and RV32, verified on the RP2350's Hazard3 cores including dual-core SMP. Xtensa/ESP32 is next (see Roadmap).</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3-3M17 17l-3 3"/></svg></div>
-        <h3>IPC, sync &amp; task notifications</h3>
-        <p>Mutexes with priority inheritance, semaphores, queues, variable-length message buffers, events, and lightweight per-task notifications - all with <code>timeout_ms</code> waits: try-once, timed, or forever.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="12" y2="17"/></svg></div>
-        <h3>Software timers &amp; deferred calls</h3>
-        <p>One-shot and periodic timers, and deferred work off an interrupt - the same one-shot, started with the data its callback needs. One kernel service task, no pool to size.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="10" width="10" height="4" rx="1"/><rect x="4" y="16" width="13" height="4" rx="1"/></svg></div>
-        <h3>Kernel heap</h3>
-        <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>, compiled out entirely when unused.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/></svg></div>
-        <h3>TrustZone support (ARMv8-M)</h3>
-        <span class="untested">not tested on hardware</span>
-        <p>Secure, non-secure, and disabled modes, with application callbacks for secure-context banking. Compiles and links, but has not been run on a TrustZone-enabled part.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg></div>
-        <h3>Multi-core scheduling</h3>
-        <p>Per-task core affinity across shared ready lists, verified end-to-end on three dual-core targets - the RP2350's Cortex-M33 pair, the same chip's Hazard3 RISC-V pair, and the RP2040's Cortex-M0+ pair - each running the self-test's dedicated cross-core stress section.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg></div>
-        <h3>Built-in self-test suite</h3>
-        <p>A standalone module that exercises every enabled feature and reports PASS/FAIL over <code>printf</code> - validate a board with zero application code.</p>
-      </div>
-      <div class="card">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4"/><line x1="9.5" y1="12" x2="14.5" y2="12"/><line x1="9.5" y1="15" x2="14.5" y2="15"/></svg></div>
-        <h3>Single public header</h3>
-        <p><code>ahura.h</code> plus one application-owned <code>os_config.h</code>, copied from a template. The kernel ships no configuration of its own.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="features">
-  <div class="wrap">
-    <div class="eyebrow">The whole API</div>
-    <h2 class="h2">Every feature, and the switch that removes it</h2>
-    <p class="lede">Each group below is one <code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> away from being compiled out entirely - code, RAM and API surface, not just skipped at run time. Everything is declared in a single header, <code>ahura.h</code>. Every parameter, status code and constraint is in the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel reference</a>.</p>
-
-    <div class="feat-grid">
-
-      <div class="feat">
-        <h3>Tasks and the scheduler</h3>
-        <span class="cfg always">always compiled in</span>
-        <p>Preemptive and priority-based: 31 levels, one FIFO ready list per priority, round-robin between equals over a slice you set. A task's stack and name belong to its handle, so creating one only says what it <em>does</em>.</p>
-        <pre><code><span class="cm">/* handle + stack, initialized at compile time */</span>
-OS_TASK_DEFINE(worker, 512U);
-
-os_task_create(&amp;worker,
-    OS_TASK_CONFIG(worker_entry, NULL, OS_TASK_PRIO_2));
-os_task_start(&amp;worker);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Critical sections &amp; scheduler lock</h3>
-        <span class="cfg always">always compiled in</span>
-        <p>Two preemption barriers, not interchangeable. A critical section masks interrupts, so it stops the tick and every driver with it. A scheduler lock stops only the scheduler - interrupts keep running and keep waking tasks. Guard task-to-task data with the lock; anything an ISR also touches needs the critical section.</p>
-        <pre><code>os_critical_enter();   <span class="cm">/* task &lt;-&gt; ISR, and across cores */</span>
-os_critical_exit();
-
-os_kernel_lock();      <span class="cm">/* task &lt;-&gt; task, interrupts live */</span>
-os_kernel_unlock();    <span class="cm">/* deferred switch happens here */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Delays and time</h3>
-        <span class="cfg always">always compiled in</span>
-        <p>Blocking delays yield the CPU once the scheduler runs, and fall back to a precise busy-wait before it does. Microsecond waits are cycle-counted.</p>
-        <pre><code>os_delay_ms(500U);
-os_delay_us(200U);            <span class="cm">/* busy-wait, cycle-accurate */</span>
-os_delay_ms(OS_WAIT_FOREVER); <span class="cm">/* park this task */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Mutexes with priority inheritance</h3>
-        <span class="cfg">OS_CONFIG_MUTEX_ENABLE</span>
-        <p>Inheritance is always on, the way FreeRTOS and Zephyr do it: a lower-priority owner is boosted to the blocking waiter's priority until it releases. Stays correct when one task holds several contended mutexes at once.</p>
-        <pre><code>os_mutex_init(&amp;lock);
-os_mutex_lock(&amp;lock, 100U);            <span class="cm">/* ms, or FOREVER */</span>
-os_mutex_lock(&amp;lock, OS_WAIT_NOTHING); <span class="cm">/* never blocks */</span>
-os_mutex_unlock(&amp;lock);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Queues</h3>
-        <span class="cfg">OS_CONFIG_QUEUE_ENABLE</span>
-        <p>Fixed-size items copied between tasks, or from an ISR to a task. The static form needs no heap and reads its item size and capacity off the array itself, so the two cannot disagree; the dynamic form takes a geometry known only at run time and is the one call that needs <code>OS_CONFIG_ALLOC_ENABLE</code>.</p>
-        <pre><code>OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);   <span class="cm">/* no heap     */</span>
-OS_QUEUE_DEFINE_STATIC_ATTR(rx_q, sample_t, 8,  <span class="cm">/* placed      */</span>
-        __attribute__((section(".dma"))));
-OS_QUEUE_DEFINE_DYNAMIC(log_q);                 <span class="cm">/* sized later */</span>
-
-os_queue_send(&amp;sensor_q, &amp;sample, 10U);
-os_queue_receive(&amp;sensor_q, &amp;out, OS_WAIT_FOREVER);
-size_t room = os_queue_free_get(&amp;sensor_q);     <span class="cm">/* back-pressure */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Message buffers - variable length</h3>
-        <span class="cfg">OS_CONFIG_MSG_ENABLE</span>
-        <p>A queue carries N items of one fixed size. A message buffer carries whole messages whose length varies - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Each receive returns exactly one message, whole and in order. Storage comes in the same three kinds as a queue's, since these are the only two objects that own a buffer.</p>
-        <pre><code><span class="cm">/* a BYTE budget, not a slot count */</span>
-OS_MSG_DEFINE_STATIC(cmd_buf, 256U);       <span class="cm">/* no heap     */</span>
-OS_MSG_DEFINE_STATIC_ATTR(rx_buf, 512U,    <span class="cm">/* placed      */</span>
-        __attribute__((section(".dma"))));
-OS_MSG_DEFINE_DYNAMIC(net_buf);            <span class="cm">/* sized later */</span>
-
-os_msg_send(&amp;cmd_buf, frame, frame_len, 10U);
-
-uint8_t rx[64];
-size_t  rx_len;
-os_msg_receive(&amp;cmd_buf, rx, sizeof(rx), &amp;rx_len, OS_WAIT_FOREVER);</code></pre>
-        <p>Each message costs 2 bytes more than its length, for the header that keeps messages apart. Nothing asks you to work that out: <code>os_msg_send</code> adds it and answers <code>OS_ERR_FULL</code> if it does not fit.</p>
-      </div>
-
-      <div class="feat">
-        <h3>Counting semaphores</h3>
-        <span class="cfg">OS_CONFIG_SEM_ENABLE</span>
-        <p>Initial and maximum count, with the same <code>timeout_ms</code> convention as everything else: try once, wait a while, or wait forever. Giving is ISR-safe.</p>
-        <pre><code>static os_sem_t sem;
-
-os_sem_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
-os_sem_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
-os_sem_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Events</h3>
-        <span class="cfg">OS_CONFIG_EVENT_ENABLE</span>
-        <p>Wait on a set of bits, for all of them or any of them, optionally clearing what matched on the way out. The classic fan-in primitive when several producers must each report done.</p>
-        <pre><code>static os_event_t evt;
-uint32_t matched;
-
-os_event_init(&amp;evt);
-os_event_set_bits(&amp;evt, 0x1U);     <span class="cm">/* ISR-safe */</span>
-os_event_wait_bits(&amp;evt, 0x7U,
-                   true,   <span class="cm">/* wait for all  */</span>
-                   true,   <span class="cm">/* clear on exit */</span>
-                   &amp;matched, 500U);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Task notifications</h3>
-        <span class="cfg">OS_CONFIG_NOTIFY_ENABLE</span>
-        <p>A single-value mailbox built into every task's own control block, so one task or an ISR can signal a specific task without allocating an object for it. The lightest signal the kernel has.</p>
-        <pre><code>os_notify_give(&amp;worker, 42U);   <span class="cm">/* ISR-safe */</span>
-
-os_notify_wait(OS_WAIT_FOREVER, &amp;value);
-os_notify_wait(OS_WAIT_FOREVER, NULL);  <span class="cm">/* wake-up only */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Timers and deferred calls</h3>
-        <span class="cfg">OS_CONFIG_TIMER_ENABLE</span>
-        <p>One-shot or periodic, with callbacks on a dedicated kernel task rather than in the tick interrupt, so a periodic timer does not drift with callback latency. Two things get called &quot;later&quot;, so there are two calls: <code>start</code> reschedules - one callback, latest event, a debounce - while <code>submit</code> queues, so an ISR firing three times runs the callback three times.</p>
-        <pre><code><span class="cm">/* the macro names the kind - no mode to pass, none to get wrong */</span>
-OS_TIMER_DEFINE_PERIODIC(t, 250U, on_expiry);
-os_timer_start(&amp;t, &amp;dev, 3U);   <span class="cm">/* ctx + value for this run */</span>
-os_timer_period_set(&amp;t, 100U);  <span class="cm">/* changeable at run time */</span>
-
-OS_TIMER_DEFINE_SUBMIT(events, 8U, 0U, handler);
-os_timer_submit(&amp;events, &amp;device, code);  <span class="cm">/* queues, never merges */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Atomics</h3>
-        <span class="cfg">OS_CONFIG_ATOMIC_ENABLE</span>
-        <p>A full operation set on a 32-bit word, every one returning the value from <em>before</em> it ran. Lock-free where the instruction set has exclusive load/store, a critical section where it does not - same API, same behaviour either way.</p>
-        <pre><code>static os_atomic_t counter = OS_ATOMIC_INIT(0);
-
-os_atomic_inc(&amp;counter);        <span class="cm">/* returns the OLD value */</span>
-os_atomic_add(&amp;counter, 5);
-os_atomic_cas(&amp;counter, 10, 20);
-os_atomic_set_bit(&amp;flags, 3U);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Kernel heap</h3>
-        <span class="cfg">OS_CONFIG_ALLOC_ENABLE</span>
-        <p>A coalescing first-fit allocator over a static array, comparable to FreeRTOS <code>heap_4</code>. Nothing is taken from the linker heap and the kernel never calls <code>malloc</code>, so what a build costs stays visible in the map file. It is also what the dynamic queue and message buffer draw on.</p>
-        <pre><code>void *p = os_mem_alloc(64U);
-os_mem_free(p);
-
-size_t free_now   = os_mem_free_get();
-size_t worst_ever = os_mem_watermark_get();</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Stack checks and diagnostics</h3>
-        <span class="cfg">OS_CONFIG_STACK_CHECK_ENABLE · _WATERMARK_ · _CPU_USAGE_</span>
-        <p>On every switch away from a task the kernel checks its stack pointer is still inside its own stack and that a guard word is intact - on every core but ARMv8-M mainline, the only detection there is. Watermarking reports the worst-case headroom a task has ever had; CPU sampling counts ticks that interrupted the idle task versus anything else.</p>
-        <pre><code><span class="cm">/* you define it; no kernel default, so a missing
-   one is a link error, not a silent detector */</span>
-void os_stack_overflow_cb(const char *task_name);
-
-os_task_stack_watermark_get(task, &amp;min_free);
-uint32_t percent = os_cpu_usage_get();  <span class="cm">/* since last call */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Logging and assertions</h3>
-        <span class="cfg">OS_CONFIG_LOG_ENABLE · OS_CONFIG_ASSERT_ENABLE</span>
-        <p>Log calls format into a ring buffer and a dedicated task drains it, so a logging task is never blocked on the transport. Assertions call your hook and park the core - the kernel ships no default, so forgetting it is a link error.</p>
-        <pre><code>OS_LOG_INFO("sensor = %d", value);
-OS_LOG_ERROR("i2c timeout on 0x%02X", addr);
-uint32_t lost = os_log_dropped_get();
-
-OS_ASSERT(index &lt; count);</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Multi-core</h3>
-        <span class="cfg">OS_CONFIG_CORE_COUNT</span>
-        <p>SMP scheduling with a per-task core-affinity mask over shared ready lists. A task can be pinned to one core, or left free to run on any of them.</p>
-        <pre><code><span class="cm">/* cores are numbered from 0 */</span>
-OS_TASK_CONFIG(entry, NULL, prio, OS_TASK_CORE(0));
-
-<span class="cm">/* or a set of allowed cores */</span>
-OS_TASK_CONFIG(entry, NULL, prio,
-               OS_TASK_CORE(0) | OS_TASK_CORE(1));</code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>Tickless idle</h3>
-        <span class="cfg">OS_CONFIG_TICKLESS_ENABLE</span>
-        <span class="untested">not completed</span>
-        <p>Suppressing the tick across a known-idle window, with two callbacks around the sleep. The ARMv8-M port implements it, but it is not yet wired into the idle task, so today the switch changes nothing at run time.</p>
-        <pre><code>void os_tickless_pre_sleep_cb(void);   <span class="cm">/* gate clocks  */</span>
-void os_tickless_post_sleep_cb(void);  <span class="cm">/* restore them */</span></code></pre>
-      </div>
-
-      <div class="feat">
-        <h3>TrustZone</h3>
-        <span class="cfg">OS_CONFIG_TRUSTZONE</span>
-        <span class="untested">not tested on hardware</span>
-        <p>Secure, non-secure or disabled, chosen per build on ARMv8-M. In non-secure mode the context switch banks each task's secure state through two callbacks you provide. The code compiles and the callbacks are wired, but none of it has been exercised on a part with the Security Extension enabled.</p>
-        <pre><code>#define OS_CONFIG_TRUSTZONE  OS_CONFIG_TRUSTZONE_NON_SECURE
-
-void os_arch_tz_context_save_cb(uint32_t task_id);
-void os_arch_tz_context_restore_cb(uint32_t task_id);</code></pre>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt" id="how-it-works">
-  <div class="wrap">
-    <div class="eyebrow">Under the hood</div>
-    <h2 class="h2">How it works</h2>
-    <p class="lede">A preemptive kernel is mostly three mechanisms: something that decides who runs, something that switches to them, and something that measures time. Here is what each one is in AhuraRTOS.</p>
-
-    <div class="flow">
-
-      <div class="flow-item">
-        <div class="flow-key">choosing a task</div>
-        <div class="flow-val">
-          One <b>FIFO ready list per priority</b>, plus a <b>32-bit bitmap</b> where bit <i>n</i> means "priority <i>n</i> has someone ready". Picking the next task is one count-leading-zeros on the bitmap and then the head of that list - <b>O(1)</b>, whatever the task count. Equal priorities rotate round-robin over the time slice, because a preempted task goes back to the tail of its own list.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">switching to it</div>
-        <div class="flow-val">
-          The switch lives in the lowest-priority exception - <b>PendSV</b> on Cortex-M, the machine software interrupt on RISC-V - so it can never preempt an ISR. It is the <b>only</b> exception the kernel takes over: the very first task starts through the same handler, down its "no task has run yet" path, which leaves <code>SVC</code> entirely to the application.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">measuring time</div>
-        <div class="flow-val">
-          One hardware counter drives the tick. Each tick advances delayed tasks and software timers, then asks for a switch <b>only if that tick actually made someone runnable</b> - a quiescent tick costs a bitmap check. Only finite sleepers sit in the delay list, so the cost follows the tasks that are sleeping, not the tasks that exist.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">storing tasks</div>
-        <div class="flow-val">
-          A <b>fixed array</b> of control blocks, sized at compile time - no allocation, ever. The scheduling lists thread through nodes embedded <i>inside</i> those blocks, so a task is an array element and a list member at once. Handles carry an id rather than a pointer, which is what lets the kernel reject a stale handle instead of following it.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">blocking</div>
-        <div class="flow-val">
-          Every wait - mutex, semaphore, queue, message, event, notification - takes the same shape: check the condition inside a critical section, and if it is not met, join the object's waiter list <i>in that same section</i>. There is no window in which a signal can arrive unseen.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">deferred callbacks</div>
-        <div class="flow-val">
-          Timer callbacks and work handlers never run in interrupt context: each has its own <b>kernel service task</b> at the top priority. So a callback may use kernel APIs like any other task - but it preempts everything, so keep it short.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">what the port owns</div>
-        <div class="flow-val">
-          Only what the CPU actually decides: the context switch, the tick, the critical-section mask, the atomics and the low-power hooks. Everything above that is ordinary portable C - which is why the whole Cortex-M range, M0 through M85, is covered by <b>three</b> shared port files, and why RISC-V was a new port rather than a kernel change.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">configuration</div>
-        <div class="flow-val">
-          One application-owned <code>os_config.h</code>, copied from a template and visible to both the application and the kernel library, so their structure sizes can never disagree. An incomplete file is a compile error rather than a silently disabled feature, and the kernel itself ships <b>no</b> editable configuration.
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section class="section" id="getting-started">
-  <div class="wrap">
-    <div class="eyebrow">Installation</div>
-    <h2 class="h2">Six steps by hand - or one command on STM32CubeMX or the Pico SDK</h2>
-    <p class="lede">AhuraRTOS takes over <strong>one</strong> exception - PendSV on Cortex-M - and asks the application for <strong>one</strong> thing: a periodic call to <code>os_tick_handler()</code>. It claims no <code>SVC_Handler</code>, no <code>SysTick_Handler</code>, no HAL and no vendor headers. That is the whole integration contract.</p>
-
-    <div class="oneliner">
-      <h3>One command, on STM32CubeMX or the Raspberry Pi Pico SDK</h3>
-      <p class="ol-sub">Run one installer from the root of your project. It fetches the kernel, copies the application-owned files, adds the CMake block, routes the tick where that is needed and wires up <code>os_init()</code> / <code>os_start()</code> - printing the exact diff first and asking before it writes anything. Python 3.8+ and nothing else, no <code>pip install</code>, and nothing left behind in your project.</p>
-
-      <p class="ol-sub">On the Pico it detects the board and picks the SoC package for it - <code>rp2040</code>, <code>rp235x_arm</code> or <code>rp235x_riscv</code> - so there is no vector or tick step to do by hand. On CubeMX every C edit goes inside a <code>USER CODE</code> section, so regeneration keeps it. <b>Running either twice is free</b>: it fills in only what is missing, which is also the repair after CubeMX regenerates over the integration. Each has an offline twin that reads a copy already on disk and imports no networking module at all.</p>
-
-      <p class="ol-foot">
-        The exact commands live with the kernel, in the pages below, so there is one copy of them rather than two that drift apart:
-        <b><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on STM32</a></b> ·
-        <b><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#automatic---one-command" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">AhuraRTOS on Raspberry Pi</a></b> ·
-        <b><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md#pick-your-chip" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">every chip, all three routes</a></b>
-      </p>
-    </div>
-
-    <div class="readme-note">
-      <div class="rn-icon">📖</div>
-      <div class="rn-body">
-        <b>The docs are the installation guide.</b> They ship with the kernel in the same repository, so the procedure is written down in exactly one place rather than copied here to drift out of date. The same six steps three times - vendor-independent, then on ST tooling and on the Raspberry Pi Pico SDK - and each page ends with a table naming the cause of every common build error.
-      </div>
-      <a class="btn btn-primary" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">Read the install guide &rarr;</a>
-    </div>
-
-    <div class="install-grid">
-
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md" target="_blank" rel="noopener">
-        <div class="ic-tag">Any platform, any toolchain</div>
-        <h4>Manual installation <span class="arw">&rarr;</span></h4>
-        <p>The procedure itself: fetch the kernel, copy the three application-owned files, add it to the build, route the tick, keep <code>PendSV_Handler</code> free, boot it. CMake and non-CMake both - Keil, MPLAB X, SEGGER or a hand-written Makefile need only the right source and include lists.</p>
-      </a>
-
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md" target="_blank" rel="noopener">
-        <div class="ic-tag">STM32CubeMX / STM32CubeIDE</div>
-        <h4>Step by step on real hardware <span class="arw">&rarr;</span></h4>
-        <p>The same steps on a NUCLEO-H503RB, verified end to end. ST tooling differs from every other vendor's in exactly two places: it generates its own <code>PendSV_Handler</code>, and its HAL takes SysTick. Exact menu paths, the CMake block, and what survives regeneration.</p>
-      </a>
-
-      <a class="install-card" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md" target="_blank" rel="noopener">
-        <div class="ic-tag">Raspberry Pi Pico SDK</div>
-        <h4>Step by step on RP2040 / RP2350 <span class="arw">&rarr;</span></h4>
-        <p>Three routes: the one command above, the offline twin, and the same install by hand. The board name picks the SoC package, which supplies the switch vector and the tick - nothing to route yourself. Verified end to end on the RP2350 and the RP2040, including dual-core SMP.</p>
-      </a>
-
-    </div>
-
-    <p class="lede" style="margin-top:30px;">Full configuration options, the integration contract, per-vendor notes, task-priority rules and every module's API live in the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">kernel reference</a> - the authoritative reference.</p>
-  </div>
-</section>
-
-<section class="section section-alt" id="verify">
-  <div class="wrap">
-    <div class="eyebrow">Verify</div>
-    <h2 class="h2">Prove the port before you build on it</h2>
-    <p class="lede">The kernel ships a self-test suite that exercises every enabled feature and reports PASS/FAIL over <code>printf</code>, finishing with a cycle-accurate benchmark table. It needs no application code and no board support beyond a working <code>printf</code>, which makes it the fastest way to confirm a new target is correctly integrated - before anything is built on top of it.</p>
-    <div class="flow">
-
-      <div class="flow-item">
-        <div class="flow-key">turning it on</div>
-        <div class="flow-val">
-          One switch in <code>os_config.h</code> and one line of CMake - both in the <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/self-test.md" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">self-test guide</a>. The test task replaces the application task, so the suite runs alone and <code>os_main()</code> is never called.
-        </div>
-      </div>
-
-      <div class="flow-item">
-        <div class="flow-key">budget the flash</div>
-        <div class="flow-val">
-          Most of the suite's footprint is the <code>.rodata</code> behind those PASS/FAIL strings - <b>roughly 100 KB at <code>-Os</code></b>, against about 20 KB for a small application. On a 128 KB part, <b>build it Release</b>: on a NUCLEO-H503RB the suite does not link at <code>-O0</code> and fits at 99% with <code>-Os</code>. Parts with 256 KB or more take either. Set the switch back to <code>0</code> and the suite leaves the image entirely.
-        </div>
-      </div>
-
-    </div>
-
-    <p class="lede" style="margin-top:26px;"><strong>Seeing nothing on the terminal?</strong> That is almost never the kernel. newlib buffers <code>stdout</code>, and on a target with no tty it buffers <em>fully</em> - the output sits in a 1 KB buffer that a kernel which never exits may never flush. Call <code>setvbuf(stdout, NULL, _IONBF, 0);</code> in <code>main()</code> before <code>os_init()</code>; that also avoids the <code>malloc</code> newlib would otherwise make for the buffer.</p>
-  </div>
-</section>
-
-<section class="section" id="architecture">
-  <div class="wrap">
-    <div class="two-col">
-      <div>
-        <div class="eyebrow">Repository Layout</div>
-        <h2 class="h2">One repository, no submodules</h2>
-        <p class="lede" style="margin-bottom:24px;">The kernel, the examples and the documentation all live in <a href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener" style="color:var(--accent-2); text-decoration:underline;">one repository</a>. A plain <code>git clone</code> gives you everything - nothing to initialise, nothing to keep in step.</p>
-        <div class="tree-box">
-<pre><code>AhuraRTOS/
-├── ahura.h     ← the one public header
-├── kernel/     ← portable core, no CPU in it
-├── arch/       ← CPU ports: Cortex-M, RV32
-├── soc/        ← vendor packages
-├── template/   ← os_config.h, os_cb.c
-├── test/       ← self-test suite
-├── examples/   ← one runnable main per feature
-├── doc/        ← installation, vendor notes,
-│               kernel reference, self-test
-├── tools/      ← one-command installers
-└── README.md   ← project overview</code></pre>
-        </div>
-      </div>
-      <div>
-        <div class="eyebrow">Boundary by Design</div>
-        <h2 class="h2">No editable kernel files</h2>
-        <p style="color:var(--text-dim); font-size:15px;">
-          The kernel exposes a single public header, <code>ahura.h</code>, and expects one application-owned config file, <code>os_config.h</code>. Everything the application needs to touch lives outside the kernel tree - the kernel itself ships no configuration of its own, keeping the application/kernel boundary explicit and easy to reason about.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt" id="roadmap">
-  <div class="wrap">
-    <div class="eyebrow">Where it's headed</div>
-    <h2 class="h2">Roadmap</h2>
-    <p class="lede">Phase 1 is underway. Everything past it is planned, not promised.</p>
-    <div class="roadmap">
-      <div class="phase active">
-        <div class="phase-tag">Phase 1 - In Progress</div>
-        <h3>ARM Cortex-M first</h3>
-        <p>Core kernel, the architecture port layer, examples, and a minimal portable HAL - with STM32 as the bring-up target.</p>
-      </div>
-      <div class="phase">
-        <div class="phase-tag">Phase 2 - Planned</div>
-        <h3>More architectures</h3>
-        <p>Ports for further instruction sets (Xtensa/ESP32), modular driver interfaces, consistent cross-platform APIs. Vendor families built on Cortex-M - NXP, TI, Nordic - already work through the ARM ports today.</p>
-      </div>
-      <div class="phase">
-        <div class="phase-tag">Phase 3 - Planned</div>
-        <h3>Ecosystem &amp; tools</h3>
-        <p>Configuration and build tooling, optional modules (filesystem, additional IPC), community-driven extensions.</p>
-      </div>
-    </div>
-    <div class="gaps"><b>Not finished:</b> tickless idle is implemented in the ARMv8-M port but not yet wired into the idle task, so the switch changes nothing at run time. <b>Not proven on hardware:</b> TrustZone builds and its callbacks are wired, but none of it has run on a part with the Security Extension enabled. Multi-core scheduling is verified on the RP2350, on both its Cortex-M33 and Hazard3 cores, and on the RP2040. Everything else on this page runs on real silicon and is covered by the self-test suite.</div>
-  </div>
-</section>
-
-<div class="cta-band">
-  <div class="wrap">
-    <h2>Not yet recommended for production - but ready to explore.</h2>
-    <p>The kernel is functional and self-testing across the Cortex-M range. APIs may still change.</p>
-    <div class="hero-ctas" style="margin-bottom:0;">
-      <a class="btn btn-primary btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">Explore the Repository</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener">Full Kernel Reference</a>
-      <a class="btn btn-ghost btn-lg" href="https://github.com/AhuraRTOS/AhuraRTOS/issues" target="_blank" rel="noopener">Open an Issue</a>
-    </div>
+<!-- ============================= CHIPS ============================= -->
+<div class="chips">
+  <div class="wrap chips-in">
+    <span class="chips-lab">Ports today</span>
+    <span class="chip">M0</span><span class="chip">M0+</span><span class="chip">M3</span>
+    <span class="chip">M4</span><span class="chip">M7</span><span class="chip">M23</span>
+    <span class="chip">M33</span><span class="chip">M55</span><span class="chip">M85</span>
+    <span class="chip rv">RV32 / Hazard3</span>
   </div>
 </div>
 
-<footer>
+<!-- ============================= FEATURES ============================= -->
+<section class="section" id="design">
   <div class="wrap">
-    <div class="footer-inner">
-      <div class="fbrand">⚡ AhuraRTOS</div>
-      <div class="footer-links">
-        <a href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/AhuraRTOS/AhuraRTOS/tree/main/kernel" target="_blank" rel="noopener">Kernel</a>
-        <a href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a>
-        <a href="https://youtube.com/@AhuraRTOS" target="_blank" rel="noopener">YouTube</a>
-        <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0 License</a>
+    <div class="sec-head">
+      <p class="eyebrow">What you get</p>
+      <h2>Decided at compile time, visible in the map file.</h2>
+      <p>Nothing you switch off costs you a byte, and nothing the kernel needs is
+         hidden from you.</p>
+    </div>
+
+    <div class="bento">
+      <div class="card lg">
+        <h3>Every feature is a switch</h3>
+        <p><code>OS_CONFIG_&lt;FEATURE&gt;_ENABLE</code> removes the code, the RAM and
+          the API surface, not just the runtime behaviour. One config file, owned by you,
+          and no kernel file you are ever meant to open.</p>
+        <div class="mini">
+<span class="c">/* your os_config.h */</span><br>
+<span class="k">#define</span> OS_CONFIG_MUTEX_ENABLE&nbsp;&nbsp;<span class="v">1U</span><br>
+<span class="k">#define</span> OS_CONFIG_MSG_ENABLE&nbsp;&nbsp;&nbsp;&nbsp;<span class="v">1U</span><br>
+<span class="k">#define</span> OS_CONFIG_ALLOC_ENABLE&nbsp;&nbsp;<span class="v">0U</span>&nbsp;&nbsp;<span class="c">/* heap gone */</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>O(1) scheduling</h3>
+        <p>One FIFO ready list per priority plus a 32-bit bitmap. The next task is a
+          count-leading-zeros and a list head, whatever the task count.</p>
+        <div style="margin-top:20px"><span class="stat">31<small>priority levels</small></span></div>
+      </div>
+
+      <div class="card">
+        <h3>Nothing allocates</h3>
+        <p>Task blocks, ready lists, timer objects, the log ring and the optional heap
+          are all static arrays. The kernel never calls <code>malloc</code>.</p>
+        <div style="margin-top:20px"><span class="stat">0<small>dynamic allocations</small></span></div>
+      </div>
+
+      <div class="card lg">
+        <h3>It proves itself on your board</h3>
+        <p>A built-in self-test exercises every enabled feature over <code>printf</code>
+          and finishes with a cycle-accurate benchmark table. It needs no application code
+          and no board support beyond a working <code>printf</code>. Flash it, read the
+          console, then start writing firmware.</p>
+      </div>
+
+      <div class="card full">
+        <div>
+          <h3>The whole integration contract</h3>
+          <p style="margin-top:10px">One exception vector, PendSV on Cortex-M and the
+            machine software interrupt on RISC-V, plus one call from your application.
+            No HAL, no CMSIS dependency, no linker-script edit, and <code>SVC</code>
+            stays entirely yours.</p>
+        </div>
+        <div class="mini" style="margin-top:0">
+<span class="c">/* the entire application side */</span><br>
+<span class="v">os_tick_handler</span>();&nbsp;&nbsp;<span class="c">// from any timer ISR</span><br><br>
+<span class="v">os_init</span>();<br>
+<span class="v">os_start</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// never returns</span>
+        </div>
       </div>
     </div>
-    <div class="foot-note">A small, multi-platform preemptive RTOS. Built by <a href="https://github.com/nimaltd" target="_blank" rel="noopener" style="color:var(--text-faint); text-decoration:underline;">@nimaltd</a>.</div>
+  </div>
+</section>
+
+
+<!-- ============================= FEATURES LIST ============================= -->
+<section class="section alt" id="features">
+  <div class="wrap">
+    <div class="sec-head" style="max-width:60ch">
+      <p class="eyebrow">Features</p>
+      <h2>Everything the kernel does, and the line that removes it.</h2>
+      <p>The right-hand column is the whole argument: turn one off and its code, its
+         RAM and its API surface leave the build together.</p>
+    </div>
+
+    <div class="feat-list">
+      <div class="feat">
+        <h3>Tasks and the scheduler</h3><span class="sw always">always in</span>
+        <p>Preemptive and priority-based: 31 levels, one FIFO ready list per priority,
+           round-robin between equals over a slice you set.</p>
+      </div>
+      <div class="feat">
+        <h3>Critical sections &amp; scheduler lock</h3><span class="sw always">always in</span>
+        <p>Two preemption barriers that are not interchangeable. One masks interrupts, the
+           other stops only the scheduler.</p>
+      </div>
+      <div class="feat">
+        <h3>Delays and time</h3><span class="sw always">always in</span>
+        <p>Blocking delays that yield, and cycle-counted microsecond waits that do not.</p>
+      </div>
+      <div class="feat">
+        <h3>Mutexes</h3><span class="sw">OS_CONFIG_MUTEX_ENABLE</span>
+        <p>Priority inheritance always on, plus deadlock detection in development
+           builds.</p>
+      </div>
+      <div class="feat">
+        <h3>Counting semaphores</h3><span class="sw">OS_CONFIG_SEM_ENABLE</span>
+        <p>Initial and maximum count, ISR-safe to give, with the usual timeout
+           convention.</p>
+      </div>
+      <div class="feat">
+        <h3>Queues</h3><span class="sw">OS_CONFIG_QUEUE_ENABLE</span>
+        <p>Fixed-size items between tasks or from an ISR. Static storage, your own array, or
+           a run-time geometry from the heap.</p>
+      </div>
+      <div class="feat">
+        <h3>Message buffers</h3><span class="sw">OS_CONFIG_MSG_ENABLE</span>
+        <p>Whole messages whose length varies, out of one byte budget they share. Each
+           receive returns exactly one, whole and in order.</p>
+      </div>
+      <div class="feat">
+        <h3>Event groups</h3><span class="sw">OS_CONFIG_EVENT_ENABLE</span>
+        <p>Wait on a set of bits, for all or any of them, clearing what matched on the
+           way out.</p>
+      </div>
+      <div class="feat">
+        <h3>Task notifications</h3><span class="sw">OS_CONFIG_NOTIFY_ENABLE</span>
+        <p>A single-value mailbox inside every task's own control block. The lightest signal
+           the kernel has.</p>
+      </div>
+      <div class="feat">
+        <h3>Timers and deferred calls</h3><span class="sw">OS_CONFIG_TIMER_ENABLE</span>
+        <p>One-shot or periodic, with callbacks on a service task rather than in the
+           tick interrupt, so they may use kernel APIs.</p>
+      </div>
+      <div class="feat">
+        <h3>Atomics</h3><span class="sw">OS_CONFIG_ATOMIC_ENABLE</span>
+        <p>A full 32-bit operation set, lock-free where the instruction set allows it
+           and a critical section where it does not.</p>
+      </div>
+      <div class="feat">
+        <h3>Kernel heap</h3><span class="sw">OS_CONFIG_ALLOC_ENABLE</span>
+        <p>A coalescing first-fit allocator over a static array. Nothing is taken from
+           the linker heap and the kernel never calls <code>malloc</code>.</p>
+      </div>
+      <div class="feat">
+        <h3>Stack checks and diagnostics</h3><span class="sw">OS_CONFIG_STACK_CHECK_ENABLE</span>
+        <p>Overflow detection on every switch away, worst-case stack headroom, and
+           idle-versus-busy CPU sampling.</p>
+      </div>
+      <div class="feat">
+        <h3>Logging and assertions</h3><span class="sw">OS_CONFIG_LOG_ENABLE</span>
+        <p>Log calls format into a ring buffer that a service task drains, so a logging
+           task is never blocked on the transport.</p>
+      </div>
+      <div class="feat">
+        <h3>Multi-core (SMP)</h3><span class="sw">OS_CONFIG_CORE_COUNT</span>
+        <p>Per-task core affinity over shared ready lists. Verified on silicon on three
+           dual-core targets, Arm and RISC-V.</p>
+      </div>
+      <div class="feat">
+        <h3>TrustZone</h3><span class="sw">OS_CONFIG_TRUSTZONE</span>
+        <p>Secure, non-secure or disabled per build on ARMv8-M. Compiles and its
+           callbacks are wired, but it has not yet run on a part with the Security
+           Extension.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= PROOF ============================= -->
+<section class="section" id="proof">
+  <div class="wrap proof">
+    <div class="sec-head" style="margin-bottom:0">
+      <p class="eyebrow">Run on silicon</p>
+      <h2>Four boards,<br>two instruction sets.</h2>
+      <p>Every row below is a real part that has run the full suite to completion
+         , including the dedicated cross-core stress section on the dual-core ones.</p>
+    </div>
+    <div class="tbl">
+      <table class="data">
+        <thead><tr><th>Board</th><th>Cores</th><th>Self-test</th></tr></thead>
+        <tbody>
+          <tr><td>Raspberry Pi Pico 2</td><td class="core">2 &times; Cortex-M33</td><td class="pass">passed</td></tr>
+          <tr><td>Raspberry Pi Pico 2</td><td class="core">2 &times; Hazard3 RV32</td><td class="pass">passed</td></tr>
+          <tr><td>Raspberry Pi Pico</td><td class="core">2 &times; Cortex-M0+</td><td class="pass">passed</td></tr>
+          <tr><td>NUCLEO-H503RB</td><td class="core">Cortex-M33</td><td class="pass">passed</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= LAYERS ============================= -->
+<section class="section alt" id="layers">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">How it is put together</p>
+      <h2>Three layers, three questions.</h2>
+      <p>A change lands in exactly one of them. That is why M0 through M85 is covered by
+         three shared port files, and why RISC-V was a new port rather than a kernel
+         change.</p>
+    </div>
+    <div class="layers">
+      <div class="card layer">
+        <code>kernel/</code>
+        <p>The portable core: scheduler, sync and IPC, timers, memory, log. Plain C11
+          with no CPU knowledge anywhere in it. Never changes with the target.</p>
+      </div>
+      <div class="card layer">
+        <code>arch/</code>
+        <p>Everything a CPU actually decides: the context switch, the tick, the
+          critical-section mask, the atomics, the low-power hooks. Changes with the
+          instruction set.</p>
+      </div>
+      <div class="card layer">
+        <code>soc/</code>
+        <p>Optional per-silicon glue: a non-CMSIS vector name, inter-core signalling,
+          hardware spinlocks. Leave it out and the kernel builds exactly as it always
+          has.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= INSTALL ============================= -->
+<section class="section" id="install">
+  <div class="wrap install">
+    <div>
+      <p class="eyebrow">Getting started</p>
+      <h2>One command.</h2>
+      <p class="lede" style="margin-top:16px">It reads your board, picks the matching
+        SoC package, copies the files you own and wires up the build. It prints the exact
+        diff first and asks before it writes anything, and running it twice is free.</p>
+      <div style="margin-top:26px"><a class="btn" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/installation.md#pick-your-chip" target="_blank" rel="noopener">Read the install guide</a></div>
+    </div>
+    <div>
+      <a class="cmd" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/raspberry-pi.md#automatic---one-command" target="_blank" rel="noopener"><span class="p">$</span> curl -fsSL .../install_rpi_online.py | python3 -</a>
+      <a class="cmd" href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/stm32.md#automatic---one-command" target="_blank" rel="noopener"><span class="p">$</span> curl -fsSL .../install_stm32_online.py | python3 -</a>
+      <p style="margin-top:14px; font-size:13.5px; color:var(--faint)">Python 3.8+ and
+        nothing else. Offline twins read a local copy and import no networking module
+        at all.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="brand" href="#top">
+        <span class="logo" style="width:34px;height:34px" aria-hidden="true"></span>
+        <b style="font-size:15px">AhuraRTOS</b>
+      </a>
+      <div class="foot-links">
+        <a href="https://github.com/AhuraRTOS/AhuraRTOS" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/kernel.md" target="_blank" rel="noopener">Kernel reference</a><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/self-test.md" target="_blank" rel="noopener">Self-test</a>
+        <a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/doc/examples.md" target="_blank" rel="noopener">Examples</a><a href="https://t.me/AhuraRTOS" target="_blank" rel="noopener">Telegram</a><a href="https://github.com/AhuraRTOS/AhuraRTOS/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0</a>
+      </div>
+    </div>
+    <p class="status"><b>Early, and honest about it.</b> The kernel is functional and
+      self-testing on every board above, but APIs may still change and it is not yet
+      recommended for production. Tickless idle is implemented on the ARMv8-M port and
+      not yet wired into the idle task; TrustZone builds and its callbacks are wired,
+      but it has never run on a part with the Security Extension enabled.</p>
   </div>
 </footer>
 
