@@ -544,8 +544,9 @@ os_mutex_unlock(&amp;lock);</code></pre>
         <h3>Queues</h3>
         <span class="cfg">OS_CONFIG_QUEUE_ENABLE</span>
         <p>Fixed-size items copied between tasks, or from an ISR to a task. The static form needs no heap and reads its item size and capacity off the array itself, so the two cannot disagree; the dynamic form takes a geometry known only at run time and is the one call that needs <code>OS_CONFIG_ALLOC_ENABLE</code>.</p>
-        <pre><code>OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);  <span class="cm">/* no heap */</span>
-OS_QUEUE_DEFINE_BUFFER(rx_q, dma_area);         <span class="cm">/* your RAM */</span>
+        <pre><code>OS_QUEUE_DEFINE_STATIC(sensor_q, sample_t, 8);   <span class="cm">/* no heap     */</span>
+OS_QUEUE_DEFINE_STATIC_ATTR(rx_q, sample_t, 8,  <span class="cm">/* placed      */</span>
+        __attribute__((section(".dma"))));
 OS_QUEUE_DEFINE_DYNAMIC(log_q);                 <span class="cm">/* sized later */</span>
 
 os_queue_send(&amp;sensor_q, &amp;sample, 10U);
@@ -558,9 +559,10 @@ size_t room = os_queue_free_get(&amp;sensor_q);     <span class="cm">/* back-pre
         <span class="cfg">OS_CONFIG_MSG_ENABLE</span>
         <p>A queue carries N items of one fixed size. A message buffer carries whole messages whose length varies - a protocol frame, a console line, a sensor burst - out of one byte budget they share. Each receive returns exactly one message, whole and in order. Storage comes in the same three kinds as a queue's, since these are the only two objects that own a buffer.</p>
         <pre><code><span class="cm">/* a BYTE budget, not a slot count */</span>
-OS_MSG_DEFINE_STATIC(cmd_buf, 256U);     <span class="cm">/* no heap     */</span>
-OS_MSG_DEFINE_BUFFER(rx_buf, dma_area);  <span class="cm">/* your RAM    */</span>
-OS_MSG_DEFINE_DYNAMIC(net_buf);          <span class="cm">/* sized later */</span>
+OS_MSG_DEFINE_STATIC(cmd_buf, 256U);       <span class="cm">/* no heap     */</span>
+OS_MSG_DEFINE_STATIC_ATTR(rx_buf, 512U,    <span class="cm">/* placed      */</span>
+        __attribute__((section(".dma"))));
+OS_MSG_DEFINE_DYNAMIC(net_buf);            <span class="cm">/* sized later */</span>
 
 os_msg_send(&amp;cmd_buf, frame, frame_len, 10U);
 
@@ -572,13 +574,13 @@ os_msg_receive(&amp;cmd_buf, rx, sizeof(rx), &amp;rx_len, OS_WAIT_FOREVER);</cod
 
       <div class="feat">
         <h3>Counting semaphores</h3>
-        <span class="cfg">OS_CONFIG_SEMAPHORE_ENABLE</span>
+        <span class="cfg">OS_CONFIG_SEM_ENABLE</span>
         <p>Initial and maximum count, with the same <code>timeout_ms</code> convention as everything else: try once, wait a while, or wait forever. Giving is ISR-safe.</p>
-        <pre><code>static os_semaphore_t sem;
+        <pre><code>static os_sem_t sem;
 
-os_semaphore_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
-os_semaphore_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
-os_semaphore_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
+os_sem_init(&amp;sem, 0U, 4U);   <span class="cm">/* initial, max */</span>
+os_sem_give(&amp;sem);           <span class="cm">/* ISR-safe */</span>
+os_sem_take(&amp;sem, OS_WAIT_FOREVER);</code></pre>
       </div>
 
       <div class="feat">
