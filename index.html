@@ -121,7 +121,7 @@ img{max-width:100%; display:block}
   background-image:var(--logo);
   background-repeat:no-repeat; background-position:center center;
   background-size:min(76vmin,720px);
-  opacity:.08;
+  opacity:.10;
   -webkit-mask-image:radial-gradient(closest-side,#000 42%,transparent 84%);
           mask-image:radial-gradient(closest-side,#000 42%,transparent 84%);
 }
@@ -513,7 +513,8 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
       <div class="feat">
         <h3>Queues</h3><span class="sw">OS_CONFIG_QUEUE_ENABLE</span>
         <p>Fixed-size items between tasks or from an ISR. Static storage, your own array, or
-           a run-time geometry from the heap.</p>
+           a run-time geometry from the heap. A full queue refuses by default, or drops its
+           oldest item so the newest reading always gets through.</p>
       </div>
       <div class="feat">
         <h3>Message buffers</h3><span class="sw">OS_CONFIG_MSG_ENABLE</span>
