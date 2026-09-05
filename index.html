@@ -661,9 +661,11 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
     </div>
     <p class="status"><b>Early, and honest about it.</b> The kernel is functional and
       self-testing on every board above, but APIs may still change and it is not yet
-      recommended for production. Tickless idle is implemented on the ARMv8-M port and
-      not yet wired into the idle task; TrustZone builds and its callbacks are wired,
-      but it has never run on a part with the Security Extension enabled.</p>
+      recommended for production. Tickless idle runs from the idle task and is proven on
+      hardware: deep sleep on the STM32H503, and light sleep on both Pico 2 cores. The
+      Cortex-M3/M4/M7 port does not suppress ticking yet, and deep sleep on the RP2350
+      is refused rather than pretended. TrustZone builds and its callbacks are wired, but
+      it has never run on a part with the Security Extension enabled.</p>
   </div>
 </footer>
 
