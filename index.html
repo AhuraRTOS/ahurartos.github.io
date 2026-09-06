@@ -393,7 +393,7 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
           <tr><td class="op">os_tick_get</td><td class="n">10</td><td class="t">0.07 &micro;s</td></tr>
         </table>
       </div>
-      <div class="console-foot">RESULT: <b>741 passed</b>, 0 failed. Every enabled feature.</div>
+      <div class="console-foot">RESULT: <b>770 passed</b>, 0 failed. Every enabled feature.</div>
     </div>
   </div>
 </section>
@@ -576,7 +576,7 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
   <div class="wrap proof">
     <div class="sec-head" style="margin-bottom:0">
       <p class="eyebrow">Run on silicon</p>
-      <h2>Four boards,<br>two instruction sets.</h2>
+      <h2>Five boards,<br>two instruction sets.</h2>
       <p>Every row below is a real part that has run the full suite to completion
          , including the dedicated cross-core stress section on the dual-core ones.</p>
     </div>
@@ -588,6 +588,7 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
           <tr><td>Raspberry Pi Pico 2</td><td class="core">2 &times; Hazard3 RV32</td><td class="pass">passed</td></tr>
           <tr><td>Raspberry Pi Pico</td><td class="core">2 &times; Cortex-M0+</td><td class="pass">passed</td></tr>
           <tr><td>NUCLEO-H503RB</td><td class="core">Cortex-M33</td><td class="pass">passed</td></tr>
+          <tr><td>NUCLEO-G431RB</td><td class="core">Cortex-M4</td><td class="pass">passed</td></tr>
         </tbody>
       </table>
     </div>
@@ -662,10 +663,12 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
     <p class="status"><b>Early, and honest about it.</b> The kernel is functional and
       self-testing on every board above, but APIs may still change and it is not yet
       recommended for production. Tickless idle runs from the idle task and is proven on
-      hardware: deep sleep on the STM32H503, and light sleep on both Pico 2 cores. The
-      Cortex-M3/M4/M7 port does not suppress ticking yet, and deep sleep on the RP2350
-      is refused rather than pretended. TrustZone builds and its callbacks are wired, but
-      it has never run on a part with the Security Extension enabled.</p>
+      hardware on <b>all five boards and all four ports</b>: deep sleep with an LPTIM on the
+      STM32G431 and STM32H503, SysTick self-suppression on ARMv8-M, and a SoC wake source on
+      ARMv6-M and RISC-V. The self-test measures it rather than assuming it - it counts tick
+      interrupts across a window of known length, and reads 0 or 1 against 40. Deep sleep on
+      the RP2350 is still refused rather than pretended. TrustZone builds and its callbacks
+      are wired, but it has never run on a part with the Security Extension enabled.</p>
   </div>
 </footer>
 
