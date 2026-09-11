@@ -381,19 +381,19 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
 
     <div class="card console">
       <div class="console-bar">
-        <span>self-test &middot; rp2350 &middot; 150 MHz</span>
+        <span>self-test &middot; stm32h503 &middot; 250 MHz</span>
         <span class="live"><span class="blip"></span>on silicon</span>
       </div>
       <div class="console-body">
         <table>
-          <tr><td class="op">context switch, task to task</td><td class="n">462</td><td class="t">3.08 &micro;s</td></tr>
-          <tr><td class="op">mutex lock + unlock</td><td class="n">594</td><td class="t">3.96 &micro;s</td></tr>
-          <tr><td class="op">queue send + receive</td><td class="n">509</td><td class="t">3.39 &micro;s</td></tr>
-          <tr><td class="op">semaphore give + take</td><td class="n">337</td><td class="t">2.25 &micro;s</td></tr>
-          <tr><td class="op">os_tick_get</td><td class="n">10</td><td class="t">0.07 &micro;s</td></tr>
+          <tr><td class="op">context switch, task to task</td><td class="n">334</td><td class="t">1.34 &micro;s</td></tr>
+          <tr><td class="op">mutex lock + unlock</td><td class="n">352</td><td class="t">1.41 &micro;s</td></tr>
+          <tr><td class="op">timer start + stop</td><td class="n">319</td><td class="t">1.28 &micro;s</td></tr>
+          <tr><td class="op">critical section, enter + exit</td><td class="n">43</td><td class="t">0.17 &micro;s</td></tr>
+          <tr><td class="op">os_tick_get</td><td class="n">10</td><td class="t">0.04 &micro;s</td></tr>
         </table>
       </div>
-      <div class="console-foot">RESULT: <b>770 passed</b>, 0 failed. Every enabled feature.</div>
+      <div class="console-foot">RESULT: <b>394 passed</b>, 0 failed. Every enabled feature.</div>
     </div>
   </div>
 </section>
@@ -437,7 +437,7 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
         <h3>O(1) scheduling</h3>
         <p>One FIFO ready list per priority plus a 32-bit bitmap. The next task is a
           count-leading-zeros and a list head, whatever the task count.</p>
-        <div style="margin-top:20px"><span class="stat">31<small>priority levels</small></span></div>
+        <div style="margin-top:20px"><span class="stat">30<small>application priorities</small></span></div>
       </div>
 
       <div class="card">
@@ -488,8 +488,9 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
     <div class="feat-list">
       <div class="feat">
         <h3>Tasks and the scheduler</h3><span class="sw always">always in</span>
-        <p>Preemptive and priority-based: 31 levels, one FIFO ready list per priority,
-           round-robin between equals over a slice you set.</p>
+        <p>Preemptive and priority-based: 32 levels - 30 for the application, one
+           reserved for the idle task and one for the kernel's service tasks - with one
+           FIFO ready list per priority and round-robin between equals over a slice you set.</p>
       </div>
       <div class="feat">
         <h3>Critical sections &amp; scheduler lock</h3><span class="sw always">always in</span>
@@ -667,8 +668,9 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
       hardware on <b>all five boards and all four ports</b>: deep sleep with an LPTIM on the
       STM32G431 and STM32H503, SysTick self-suppression on ARMv8-M, and a SoC wake source on
       ARMv6-M and RISC-V. The self-test measures it rather than assuming it - it counts tick
-      interrupts across a window of known length, and reads 0 or 1 against 40. Deep sleep on
-      the RP2350 is still refused rather than pretended. TrustZone builds and its callbacks
+      interrupts across a window of known length, and reads 0 or 1 against 40. Deep sleep is implemented on
+      the RP2350's Arm port, and refused rather than pretended on the RP2040 and the
+      RP2350's RISC-V port. TrustZone builds and its callbacks
       are wired, but it has never run on a part with the Security Extension enabled.</p>
   </div>
 </footer>
