@@ -665,12 +665,13 @@ footer{border-top:1px solid var(--line); padding-block:34px 48px; font-size:14px
     <p class="status"><b>Early, and honest about it.</b> The kernel is functional and
       self-testing on every board above, but APIs may still change and it is not yet
       recommended for production. Tickless idle runs from the idle task and is proven on
-      hardware on <b>all five boards and all four ports</b>: deep sleep with an LPTIM on the
-      STM32G431 and STM32H503, SysTick self-suppression on ARMv8-M, and a SoC wake source on
-      ARMv6-M and RISC-V. The self-test measures it rather than assuming it - it counts tick
-      interrupts across a window of known length, and reads 0 or 1 against 40. Deep sleep is implemented on
-      the RP2350's Arm port, and refused rather than pretended on the RP2040 and the
-      RP2350's RISC-V port. TrustZone builds and its callbacks
+      hardware on <b>all six boards and all four ports</b>: deep sleep with an LPTIM on all three
+      NUCLEO boards, SysTick self-suppression on ARMv8-M, and a SoC wake source on ARMv6-M and
+      RISC-V. The self-test measures it rather than assuming it - it counts tick
+      interrupts across a window of known length, and reads 0 or 1 against 40. Deep sleep - the PLL
+      stopped, not just the core halted - runs on five of the six: both RP2350 ports and all three
+      NUCLEOs. It is refused rather than pretended on the RP2040, whose only alarm that outlives the
+      clocks counts in whole seconds. TrustZone builds and its callbacks
       are wired, but it has never run on a part with the Security Extension enabled.</p>
   </div>
 </footer>
